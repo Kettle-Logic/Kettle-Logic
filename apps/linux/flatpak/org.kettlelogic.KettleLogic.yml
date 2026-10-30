@@ -1,0 +1,58 @@
+# Flatpak manifest for Kettle Logic. Build it on Linux, from the repository root:
+#
+#   flatpak install flathub org.gnome.Platform//48 org.gnome.Sdk//48
+#   flatpak-builder --force-clean --user --install build-flatpak apps/linux/flatpak/org.kettlelogic.KettleLogic.yml
+#   flatpak run org.kettlelogic.KettleLogic
+#
+# See README.md ("Packaging: Linux") for the rest of the steps, including the bundle for a release.
+#
+# The runtime version is pinned to GNOME 48. Move it to the current GNOME runtime when the app is released, and check
+# that GTK and libadwaita are new enough for apps/linux/CMakeLists.txt (GTK 4.12, libadwaita 1.5).
+id: org.kettlelogic.KettleLogic
+runtime: org.gnome.Platform
+runtime-version: "48"
+sdk: org.gnome.Sdk
+command: kettlelogic-gtk
+
+finish-args:
+  # The window: Wayland, or X11 through XWayland, with the GPU for drawing.
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # The update check reads the update list on GitHub. Nothing else leaves the sandbox.
+  - --share=network
+  # The default recipe folder, ~/KettleLogic/Recipes. Other folders are chosen through the file portal.
+  - --filesystem=~/KettleLogic:create
+
+modules:
+  # The engine uses Boost's header-only multiprecision library. The GNOME SDK does not include Boost, so its headers
+  # are copied into the prefix. Only headers are needed; nothing is compiled from Boost.
+  - name: boost
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/include
+      - cp -r boost /app/include/
+    sources:
+      - type: archive
+        url: https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
+        sha256: af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89
+
+  # The app, built from this repository. The source is the whole tree, minus build folders and version-control data.
+  - name: kettlelogic
+    buildsystem: simple
+    build-commands:
+      - cmake -S apps/linux -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DBoost_INCLUDE_DIR=/app/include
+      - cmake --build build
+      - cmake --install build
+    sources:
+      - type: dir
+        path: ../../..
+        skip:
+          - build
+          - build-flatpak
+          - .flatpak-builder
+          - .git
+          - "**/.build"
+          - apps/macos/build
+          - apps/macos/.build

@@ -1,0 +1,75 @@
+{
+  "beerjson": {
+    "version": 3,
+    "recipes": [
+      {
+        "name": "Sample Cider",
+        "type": "cider",
+        "author": "Kim",
+        "created": "2026-10-29",
+        "batch_size": {
+          "value": 5,
+          "unit": "gal"
+        },
+        "efficiency": {
+          "brewhouse": {
+            "value": 72,
+            "unit": "%"
+          }
+        },
+        "ingredients": {
+          "fermentable_additions": [
+            {
+              "name": "Apple juice",
+              "type": "juice",
+              "yield": {
+                "potential": {
+                  "value": 1.05,
+                  "unit": "sg"
+                }
+              },
+              "color": {
+                "value": 0,
+                "unit": "Lovi"
+              },
+              "amount": {
+                "value": 5,
+                "unit": "gal"
+              }
+            }
+          ],
+          "miscellaneous_additions": [
+            {
+              "name": "Potassium metabisulfite",
+              "type": "other",
+              "amount": {
+                "value": 0.5,
+                "unit": "g"
+              },
+              "timing": {
+                "use": "add_to_fermentation"
+              }
+            }
+          ],
+          "culture_additions": [
+            {
+              "name": "Cider yeast",
+              "type": "ale",
+              "form": "liquid",
+              "amount": {
+                "value": 1,
+                "unit": "pkg"
+              },
+              "timing": {
+                "use": "add_to_fermentation"
+              }
+            }
+          ]
+        },
+        "notes": "Test fixture. Not a tested recipe."
+      }
+    ],
+    "packaging": [],
+    "profiles": []
+  }
+}

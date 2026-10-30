@@ -1,0 +1,113 @@
+# Build output. Everything under build/ is generated: the engine and app builds, the release files, the
+# smoke-test screenshots, and the logs. Other build folders from the README steps and the Flatpak builder are listed too.
+build/
+build-flatpak/
+build-repo/
+.flatpak-builder/
+dist/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+
+# Compiled and packaged output
+*.o
+*.obj
+*.a
+*.lib
+*.dylib
+*.so
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.dmg
+*.flatpak
+*.msi
+
+# Swift and Xcode: per-user state, and the package build folder
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Windows and Visual Studio: per-user state and build output (the NuGet packages are restored, not stored)
+.vs/
+*.user
+*.suo
+*.ncb
+*.sdf
+apps/windows/**/x64/
+apps/windows/**/ARM64/
+apps/windows/**/obj/
+apps/windows/**/bin/
+Generated Files/
+apps/windows/packages/
+
+# Release files and the update list, which GitHub holds. The copy in the repository would go stale.
+/updates.json
+published-updates.json
+
+# Secrets: signing certificates, provisioning profiles, and environment files
+*.p12
+*.p8
+*.keystore
+*.jks
+*.pfx
+*.cer
+*.mobileprovision
+*.provisionprofile
+*.pem
+*.key
+*.keychain
+*.keychain-db
+.env
+.env.*
+
+# Python: bytecode, caches, and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+htmlcov/
+*.egg-info/
+.venv/
+venv/
+
+# Generated for editors and CMake, and per-user
+compile_commands.json
+CMakeUserPresets.json
+.cache/
+
+# Claude Code: local settings, which are per-user
+.claude/settings.local.json
+
+# Editors and the operating system
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+Icon?
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+desktop.ini
+
+# Logs and scratch files
+*.log
+*.tmp
+*.bak
+
+# macOS
+.DS_Store

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Kettle Logic
+GenericName=Recipe Designer
+Comment=Design and manage homebrew recipes
+Exec=kettlelogic-gtk %F
+Icon=org.kettlelogic.KettleLogic
+Terminal=false
+Categories=Utility;
+Keywords=beer;brewing;recipe;homebrew;
+MimeType=application/json;
+StartupNotify=true

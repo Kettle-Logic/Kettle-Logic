@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/beerjson/beerjson/main/json/water.json",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "WaterBase": {
+      "type": "object",
+      "description": "WaterBase provides unique properties to identify individual records of  brewing water.",
+      "properties": {
+        "name": {
+          "description": "Name of the water profile.",
+          "type": "string"
+        },
+        "producer": {
+          "description": "The utility or source the profile describes.",
+          "type": "string"
+        },
+        "calcium": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "bicarbonate": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "carbonate": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "potassium": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "iron": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "nitrate": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "nitrite": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "fluoride": {
+          "description": "The concentration of fluoride in the water.",
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "flouride": {
+          "deprecated": true,
+          "description": "Misspelling of fluoride, kept so existing documents stay valid. Write fluoride instead; readers should accept either and prefer fluoride when both are present.",
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "sulfate": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "chloride": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "sodium": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        },
+        "magnesium": {
+          "$ref": "measureable_units.json#/$defs/ConcentrationType"
+        }
+      },
+      "required": [
+        "name",
+        "calcium",
+        "bicarbonate",
+        "sulfate",
+        "chloride",
+        "sodium",
+        "magnesium"
+      ]
+    },
+    "WaterType": {
+      "type": "object",
+      "description": "WaterType collects the attributes of a brewing water to store as record information",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/WaterBase"
+        },
+        {
+          "properties": {
+            "pH": {
+              "description": "The pH of the water.",
+              "type": "number"
+            },
+            "notes": {
+              "description": "Free text notes about the water profile.",
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "WaterAdditionType": {
+      "type": "object",
+      "description": "WaterAdditionType collects the attributes of each water addition for use in a recipe",
+      "allOf": [
+        {
+          "$ref": "#/$defs/WaterBase"
+        },
+        {
+          "properties": {
+            "amount": {
+              "$ref": "measureable_units.json#/$defs/VolumeType"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

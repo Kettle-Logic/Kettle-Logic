@@ -1,0 +1,7 @@
+// The facade's header lives with the engine, so the engine's C interface has one definition. The loader is the
+// app's stand-in for that interface: it has the same function names, and it loads the engine at launch.
+module CKettleLogic {
+    header "../../../../../core/include/kettlelogic/c/kettlelogic.h"
+    header "engine_loader.h"
+    export *
+}

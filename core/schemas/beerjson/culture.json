@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/beerjson/beerjson/main/json/culture.json",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "CultureBase": {
+      "type": "object",
+      "description": "Identifies a microbial culture. Nothing is calculated from it directly, so it carries identity alone. `CultureInformation` extends it into a full catalogue record, and `CultureAdditionType` extends it with a pitch.",
+      "properties": {
+        "name": {
+          "description": "Name of the culture, usually the name its producer sells it under.",
+          "type": "string"
+        },
+        "type": {
+          "description": "The kind of organism the culture is, which determines how it ferments and what flavours it contributes.",
+          "type": "string",
+          "enum": [
+            "ale",
+            "bacteria",
+            "brett",
+            "champagne",
+            "kveik",
+            "lacto",
+            "lager",
+            "malolactic",
+            "mixed-culture",
+            "other",
+            "pedio",
+            "spontaneous",
+            "wheat",
+            "wine"
+          ]
+        },
+        "form": {
+          "description": "The physical form the culture is supplied or stored in.",
+          "type": "string",
+          "enum": [
+            "liquid",
+            "dry",
+            "slant",
+            "culture",
+            "dregs"
+          ]
+        },
+        "producer": {
+          "description": "The lab or company that produced the culture.",
+          "type": "string"
+        },
+        "product_id": {
+          "description": "The producer's catalogue number for the culture, such as WLP001 or 3068.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "form"
+      ]
+    },
+    "CultureInformation": {
+      "type": "object",
+      "description": "The full catalogue record for a culture: `CultureBase` plus the behaviour a lab publishes, such as temperature range, attenuation range and flocculation. This is the form used in the `cultures` list at the document root.",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/CultureBase"
+        },
+        {
+          "properties": {
+            "temperature_range": {
+              "description": "The recommended temperature range of fermentation by the culture producer.",
+              "$ref": "measureable_units.json#/$defs/TemperatureRangeType"
+            },
+            "alcohol_tolerance": {
+              "description": "The recommended limit of abv by the culture producer before attenuation stops.",
+              "$ref": "measureable_units.json#/$defs/PercentType"
+            },
+            "flocculation": {
+              "description": "Flocculation refers to the ability of a culture to aggregate into large flocs which drop out of suspension.",
+              "$ref": "measureable_units.json#/$defs/QualitativeRangeType"
+            },
+            "attenuation_range": {
+              "$ref": "measureable_units.json#/$defs/PercentRangeType"
+            },
+            "notes": {
+              "description": "Free text notes about the culture.",
+              "type": "string"
+            },
+            "best_for": {
+              "description": "Recommended styles for a particular culture.",
+              "type": "string"
+            },
+            "max_reuse": {
+              "description": "Maximum number of times to reuse a culture before a new lab source is recommended.",
+              "type": "integer"
+            },
+            "pof": {
+              "description": "A POF+ culture is capable of producing phenols, which is a common distinctive property of saison, and brett yeasts.",
+              "type": "boolean"
+            },
+            "glucoamylase": {
+              "description": "A glucoamylase positive culture is capable of producing glucoamylase, the enzyme produced through expression of the diastatic gene, which allows yeast to attenuate dextrins and starches leading to a very low FG. This is positive in some saison/brett yeasts as well as the new gulo hybrid by Omega yeast labs.",
+              "type": "boolean"
+            },
+            "inventory": {
+              "$ref": "#/$defs/CultureInventoryType"
+            },
+            "zymocide": {
+              "$ref": "#/$defs/Zymocide"
+            }
+          }
+        }
+      ]
+    },
+    "CultureAdditionType": {
+      "type": "object",
+      "description": "A culture as pitched into a recipe: `CultureBase` plus how much, when, and what was measured at pitch time such as cell count and generation. Catalogue detail belongs in a `CultureInformation` record at the document root, not here.",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/CultureBase"
+        },
+        {
+          "properties": {
+            "attenuation": {
+              "description": "The expected, or measured apparent attenuation for a given culture in a given recipe. In comparison to attenuation range, this is a single value.",
+              "$ref": "measureable_units.json#/$defs/PercentType"
+            },
+            "times_cultured": {
+              "description": "How many times this culture has already been harvested and repitched. Absent or zero means a fresh pitch from the producer.",
+              "type": "integer"
+            },
+            "timing": {
+              "description": "The timing object fully describes the timing of an addition with options for basis on time, gravity, or pH at any process step.",
+              "$ref": "timing.json#/$defs/TimingType"
+            },
+            "cell_count_billions": {
+              "description": "The number of viable cells pitched, in billions.",
+              "type": "integer"
+            },
+            "amount": {
+              "description": "The quantity pitched: by volume for a liquid culture, by mass for a dry one, or by unit for whole packets.",
+              "oneOf": [
+                {
+                  "$ref": "measureable_units.json#/$defs/VolumeType"
+                },
+                {
+                  "$ref": "measureable_units.json#/$defs/MassType"
+                },
+                {
+                  "$ref": "measureable_units.json#/$defs/UnitType"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "required": [
+            "amount"
+          ]
+        }
+      ]
+    },
+    "CultureInventoryType": {
+      "description": "The quantity of a culture held in stock, recorded separately for each form it is stored in.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "liquid": {
+          "$ref": "measureable_units.json#/$defs/VolumeType"
+        },
+        "dry": {
+          "$ref": "measureable_units.json#/$defs/MassType"
+        },
+        "slant": {
+          "$ref": "measureable_units.json#/$defs/VolumeType"
+        },
+        "culture": {
+          "$ref": "measureable_units.json#/$defs/VolumeType"
+        }
+      }
+    },
+    "Zymocide": {
+      "type": "object",
+      "description": "Zymocide, also known as killer yeast properties, is common among wine yeast. There are also some ale and brett yeasts that are immune to some zymocidic properties, these are known as killer neutral.",
+      "additionalProperties": false,
+      "properties": {
+        "no1": {
+          "description": "Whether the culture expresses the K1 killer factor, a toxin lethal to strains sensitive to it.",
+          "type": "boolean"
+        },
+        "no2": {
+          "description": "Whether the culture expresses the K2 killer factor, a toxin lethal to strains sensitive to it.",
+          "type": "boolean"
+        },
+        "no28": {
+          "description": "Whether the culture expresses the K28 killer factor, a toxin lethal to strains sensitive to it.",
+          "type": "boolean"
+        },
+        "klus": {
+          "description": "Whether the culture expresses the Klus killer factor, a toxin lethal to strains sensitive to it.",
+          "type": "boolean"
+        },
+        "neutral": {
+          "description": "Whether the culture is neutral: it produces no killer factor, but is not sensitive to them either.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

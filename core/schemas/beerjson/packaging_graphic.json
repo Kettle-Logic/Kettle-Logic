@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/beerjson/beerjson/main/json/packaging_graphic.json",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "PackagingGraphicType": {
+      "type": "object",
+      "description": "PackagingGraphicType - a representation of a graphic to be placed on a vessel.",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "description": "Where on the vessel the graphic is placed.",
+          "type": "string",
+          "enum": [
+            "body front",
+            "body back",
+            "body wrap around",
+            "neck front",
+            "neck back",
+            "neck wrap around",
+            "cap",
+            "carrier"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "svg",
+            "svgz",
+            "ai",
+            "cdr",
+            "cdx",
+            "odg",
+            "eps",
+            "pdf",
+            "png",
+            "jpg",
+            "gif"
+          ],
+          "description": "File type"
+        },
+        "base64_data": {
+          "type": "string",
+          "description": "base64 encoded file."
+        },
+        "URLS": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "URLS to hosted version of image."
+        },
+        "dpi": {
+          "type": "number",
+          "description": "Dots per inch."
+        },
+        "width": {
+          "description": "Width of the graphic, in the unit given by the units property.",
+          "type": "number"
+        },
+        "height": {
+          "description": "Height of the graphic, in the unit given by the units property.",
+          "type": "number"
+        },
+        "units": {
+          "type": "string",
+          "enum": [
+            "mm",
+            "in"
+          ],
+          "description": "The unit type which are used for measurements."
+        }
+      },
+      "required": [
+        "position",
+        "type"
+      ]
+    }
+  }
+}

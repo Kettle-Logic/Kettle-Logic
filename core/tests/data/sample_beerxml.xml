@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A BeerXML 1.0 file in the form BeerSmith writes: a pale ale with every kind of record. -->
+<RECIPES>
+  <RECIPE>
+    <VERSION>1</VERSION>
+    <NAME>Sample Pale Ale</NAME>
+    <TYPE>All Grain</TYPE>
+    <STYLE>
+      <NAME>American Pale Ale</NAME>
+      <VERSION>1</VERSION>
+      <CATEGORY>Pale Ale</CATEGORY>
+      <CATEGORY_NUMBER>18</CATEGORY_NUMBER>
+      <STYLE_LETTER>B</STYLE_LETTER>
+      <STYLE_GUIDE>BJCP</STYLE_GUIDE>
+      <TYPE>Ale</TYPE>
+    </STYLE>
+    <BREWER>Sample Brewer</BREWER>
+    <BATCH_SIZE>23</BATCH_SIZE>
+    <BOIL_SIZE>28</BOIL_SIZE>
+    <BOIL_TIME>60</BOIL_TIME>
+    <EFFICIENCY>72</EFFICIENCY>
+    <OG>1.052</OG>
+    <FG>1.012</FG>
+    <NOTES>Brewed &amp; tested, &lt;twice&gt;.</NOTES>
+    <FERMENTABLES>
+      <FERMENTABLE>
+        <VERSION>1</VERSION>
+        <NAME>Pale 2-Row</NAME>
+        <TYPE>Grain</TYPE>
+        <AMOUNT>4.5</AMOUNT>
+        <YIELD>80</YIELD>
+        <COLOR>2</COLOR>
+        <ORIGIN>US</ORIGIN>
+        <SUPPLIER>Briess</SUPPLIER>
+      </FERMENTABLE>
+      <FERMENTABLE>
+        <VERSION>1</VERSION>
+        <NAME>Table Sugar</NAME>
+        <TYPE>Sugar</TYPE>
+        <AMOUNT>0.1</AMOUNT>
+        <YIELD>100</YIELD>
+        <COLOR>0</COLOR>
+      </FERMENTABLE>
+      <FERMENTABLE>
+        <VERSION>1</VERSION>
+        <NAME>Light LME</NAME>
+        <TYPE>Extract</TYPE>
+        <AMOUNT>1.5</AMOUNT>
+        <YIELD>78</YIELD>
+        <COLOR>7</COLOR>
+        <ADD_AFTER_BOIL>FALSE</ADD_AFTER_BOIL>
+      </FERMENTABLE>
+    </FERMENTABLES>
+    <HOPS>
+      <HOP>
+        <VERSION>1</VERSION>
+        <NAME>Cascade</NAME>
+        <ALPHA>5.5</ALPHA>
+        <AMOUNT>0.028</AMOUNT>
+        <USE>Boil</USE>
+        <TIME>60</TIME>
+        <FORM>Pellet</FORM>
+        <ORIGIN>US</ORIGIN>
+      </HOP>
+      <HOP>
+        <VERSION>1</VERSION>
+        <NAME>Cascade</NAME>
+        <ALPHA>5.5</ALPHA>
+        <AMOUNT>0.028</AMOUNT>
+        <USE>Dry Hop</USE>
+        <TIME>10080</TIME>
+        <FORM>Pellet</FORM>
+        <BETA>4.5</BETA>
+      </HOP>
+    </HOPS>
+    <MISCS>
+      <MISC>
+        <VERSION>1</VERSION>
+        <NAME>Irish Moss</NAME>
+        <TYPE>Fining</TYPE>
+        <USE>Boil</USE>
+        <TIME>15</TIME>
+        <AMOUNT>0.005</AMOUNT>
+        <AMOUNT_IS_WEIGHT>TRUE</AMOUNT_IS_WEIGHT>
+      </MISC>
+    </MISCS>
+    <YEASTS>
+      <YEAST>
+        <VERSION>1</VERSION>
+        <NAME>American Ale</NAME>
+        <TYPE>Ale</TYPE>
+        <FORM>Liquid</FORM>
+        <AMOUNT>0.25</AMOUNT>
+        <AMOUNT_IS_WEIGHT>FALSE</AMOUNT_IS_WEIGHT>
+        <LABORATORY>Wyeast</LABORATORY>
+        <PRODUCT_ID>1056</PRODUCT_ID>
+        <ATTENUATION>75</ATTENUATION>
+      </YEAST>
+    </YEASTS>
+    <WATERS>
+      <WATER>
+        <VERSION>1</VERSION>
+        <NAME>Burton</NAME>
+        <AMOUNT>23</AMOUNT>
+        <CALCIUM>52</CALCIUM>
+        <BICARBONATE>0</BICARBONATE>
+        <SULFATE>350</SULFATE>
+        <CHLORIDE>40</CHLORIDE>
+        <SODIUM>10</SODIUM>
+        <MAGNESIUM>9</MAGNESIUM>
+        <PH>8.2</PH>
+      </WATER>
+    </WATERS>
+    <MASH>
+      <VERSION>1</VERSION>
+      <NAME>Single Infusion</NAME>
+      <GRAIN_TEMP>20</GRAIN_TEMP>
+      <MASH_STEPS>
+        <MASH_STEP>
+          <VERSION>1</VERSION>
+          <NAME>Saccharification</NAME>
+          <TYPE>Infusion</TYPE>
+          <INFUSE_AMOUNT>18</INFUSE_AMOUNT>
+          <STEP_TEMP>67</STEP_TEMP>
+          <STEP_TIME>60</STEP_TIME>
+        </MASH_STEP>
+        <MASH_STEP>
+          <VERSION>1</VERSION>
+          <NAME>Mash Out</NAME>
+          <TYPE>Temperature</TYPE>
+          <STEP_TEMP>76</STEP_TEMP>
+          <STEP_TIME>2.5</STEP_TIME>
+          <RAMP_TIME>5</RAMP_TIME>
+        </MASH_STEP>
+      </MASH_STEPS>
+    </MASH>
+  </RECIPE>
+</RECIPES>

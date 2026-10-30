@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Where the engine and the app's portable logic are, relative to this project. -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- The app's own version, shown in About Kettle Logic. The engine's version is kettlelogic/version.hpp. -->
+    <KettleLogicUiVersion>0.1.0</KettleLogicUiVersion>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..'))\</RepoRoot>
+    <!-- build.ps1 builds both libraries here. -->
+    <EngineBuildDir>$(RepoRoot)build\windows-logic\</EngineBuildDir>
+    <!-- The engine uses header-only Boost. Set BOOST_ROOT, or use a vcpkg that is integrated with Visual Studio. -->
+    <BoostIncludeDir Condition="'$(BOOST_ROOT)' != ''">$(BOOST_ROOT)</BoostIncludeDir>
+    <BoostIncludeDir Condition="'$(BoostIncludeDir)' == '' and '$(BoostRoot)' != ''">$(BoostRoot)</BoostIncludeDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(BoostIncludeDir)' == '' and '$(Boost_ROOT)' != ''">
+    <BoostIncludeDir>$(Boost_ROOT)</BoostIncludeDir>
+  </PropertyGroup>
+</Project>

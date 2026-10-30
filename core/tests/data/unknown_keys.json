@@ -1,0 +1,204 @@
+{
+  "beerjson": {
+    "version": 3,
+    "recipes": [
+      {
+        "name": "Sample Pale Ale",
+        "type": "all grain",
+        "author": "Kim",
+        "created": "2026-10-29",
+        "batch_size": {
+          "value": 5,
+          "unit": "gal",
+          "extra": "x"
+        },
+        "efficiency": {
+          "brewhouse": {
+            "value": 72,
+            "unit": "%"
+          }
+        },
+        "ingredients": {
+          "fermentable_additions": [
+            {
+              "name": "Pale Malt (2-Row)",
+              "type": "grain",
+              "grain_group": "base",
+              "yield": {
+                "fine_grind": {
+                  "value": 80,
+                  "unit": "%"
+                }
+              },
+              "color": {
+                "value": 2,
+                "unit": "Lovi"
+              },
+              "amount": {
+                "value": 10,
+                "unit": "lb"
+              },
+              "bogus": true
+            }
+          ],
+          "hop_additions": [
+            {
+              "name": "Cascade",
+              "alpha_acid": {
+                "value": 5.5,
+                "unit": "%"
+              },
+              "form": "pellet",
+              "amount": {
+                "value": 1,
+                "unit": "oz"
+              },
+              "timing": {
+                "time": {
+                  "value": 60,
+                  "unit": "min"
+                },
+                "use": "add_to_boil"
+              }
+            }
+          ],
+          "miscellaneous_additions": [
+            {
+              "name": "Irish Moss",
+              "type": "fining",
+              "amount": {
+                "value": 1,
+                "unit": "each"
+              },
+              "timing": {
+                "time": {
+                  "value": 15,
+                  "unit": "min"
+                },
+                "use": "add_to_boil"
+              }
+            }
+          ],
+          "culture_additions": [
+            {
+              "name": "American Ale",
+              "type": "ale",
+              "form": "liquid",
+              "product_id": "WLP001",
+              "amount": {
+                "value": 1,
+                "unit": "pkg"
+              },
+              "timing": {
+                "use": "add_to_fermentation"
+              }
+            }
+          ],
+          "water_additions": [
+            {
+              "name": "Brewing water",
+              "calcium": {
+                "value": 50,
+                "unit": "mg/l"
+              },
+              "bicarbonate": {
+                "value": 100,
+                "unit": "mg/l"
+              },
+              "sulfate": {
+                "value": 75,
+                "unit": "mg/l"
+              },
+              "chloride": {
+                "value": 40,
+                "unit": "mg/l"
+              },
+              "sodium": {
+                "value": 10,
+                "unit": "mg/l"
+              },
+              "magnesium": {
+                "value": 5,
+                "unit": "mg/l"
+              },
+              "amount": {
+                "value": 6,
+                "unit": "gal"
+              },
+              "extra_water": 2
+            }
+          ]
+        },
+        "mash": {
+          "name": "Single Infusion, Medium Body",
+          "grain_temperature": {
+            "value": 20,
+            "unit": "C"
+          },
+          "mash_steps": [
+            {
+              "name": "Saccharification",
+              "type": "infusion",
+              "step_temperature": {
+                "value": 67,
+                "unit": "C"
+              },
+              "step_time": {
+                "value": 60,
+                "unit": "min"
+              },
+              "water_grain_ratio": {
+                "value": 1.5,
+                "unit": "qt/lb"
+              }
+            }
+          ]
+        },
+        "notes": "Test fixture. Not a tested recipe.",
+        "original_gravity": {
+          "value": 1.05,
+          "unit": "sg"
+        },
+        "final_gravity": {
+          "value": 1.012,
+          "unit": "sg"
+        },
+        "alcohol_by_volume": {
+          "value": 5,
+          "unit": "%"
+        },
+        "carbonation": 2.4,
+        "fermentation": {
+          "name": "Ale, Single Stage",
+          "fermentation_steps": [
+            {
+              "name": "Primary",
+              "start_temperature": {
+                "value": 18,
+                "unit": "C"
+              },
+              "step_time": {
+                "value": 14,
+                "unit": "day"
+              },
+              "vessel": "Fermenter"
+            }
+          ]
+        },
+        "boil": {
+          "boil_time": {
+            "value": 60,
+            "unit": "min"
+          },
+          "pre_boil_size": {
+            "value": 6.5,
+            "unit": "gal"
+          }
+        },
+        "bogus_recipe_key": 1
+      }
+    ],
+    "packaging": [],
+    "profiles": []
+  }
+}
