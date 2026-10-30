@@ -55,7 +55,7 @@ The engine also has an interface number, `KL_ENGINE_ABI_VERSION` in `core/includ
 
 ## Building and testing the engine
 
-Requirements: CMake 3.25+, a C++20 compiler, and Boost (header-only `multiprecision` is used for exact rationals). The schema conformance test also needs Python 3 with `jsonschema`.
+Requirements: CMake 3.25+, a C++20 compiler, and Boost 1.80 or newer (header-only `multiprecision` is used for exact rationals). The schema conformance test also needs Python 3 with `jsonschema`.
 
 On macOS with Homebrew:
 
@@ -64,13 +64,44 @@ brew install boost cmake
 python3 -m pip install jsonschema
 ```
 
-Then:
+On Debian or Ubuntu 24.04 or newer:
+
+```sh
+sudo apt install build-essential cmake libboost-dev python3-jsonschema
+```
+
+On Fedora:
+
+```sh
+sudo dnf install gcc-c++ cmake boost-devel python3-jsonschema
+```
+
+On Windows, from a Developer PowerShell for Visual Studio 2022 (see [Windows](#windows-winui-3-with-c-winrt) for the install list), with Boost from vcpkg:
+
+```powershell
+vcpkg install boost-headers
+python -m pip install jsonschema
+$env:BOOST_ROOT = "C:\vcpkg\installed\x64-windows\include"
+```
+
+Then, on macOS and Linux:
 
 ```sh
 cmake -S core -B build/core
 cmake --build build/core
 ctest --test-dir build/core --output-on-failure
 ```
+
+On Windows, the Visual Studio generator is multi-config, so the build and test steps name the configuration:
+
+```powershell
+cmake -S core -B build\core -G "Visual Studio 17 2022" -A x64
+cmake --build build\core --config Release
+ctest --test-dir build\core -C Release --output-on-failure
+```
+
+`apps\windows\build.ps1` does the same engine build and tests as part of the app build, so you only need the steps above
+to work on the engine by itself.
 
 The engine's outputs in `build/core` are:
 
