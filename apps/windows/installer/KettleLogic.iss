@@ -1,5 +1,5 @@
 ; Inno Setup script for the Windows installer. Build it with apps\windows\make-installer.ps1, which passes the
-; defines below. Inno Setup 6 is required (https://jrsoftware.org/isinfo.php).
+; defines below. Inno Setup 7 is required (https://jrsoftware.org/isinfo.php).
 ;
 ; The in-app update (apps/windows/KettleLogic/AppUpdates.cpp) runs this installer with /SILENT, /CLOSEAPPLICATIONS,
 ; and /RESTARTAPPLICATIONS. Keep those switches working, and keep the AppId and the rules in docs/updates.md:

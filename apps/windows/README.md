@@ -55,8 +55,8 @@ offer the same ingredients, systems, styles, and tools.
 
 Requirements:
 
-- Visual Studio 2022 17.8 or newer, or Visual Studio 2026, with "Desktop development with C++" and "Windows application
-  development". `build.ps1` uses the newest of the two that CMake has a generator for.
+- Visual Studio 2026 with "Desktop development with C++" and "Windows application
+  development". `build.ps1` uses the Visual Studio 2026 generator (MSVC toolset v145).
 - CMake 3.25 or newer on the path (Developer PowerShell has it with Visual Studio), and `nuget.exe` on the path
   ([nuget.org/downloads](https://www.nuget.org/downloads)).
 - Boost 1.80 or newer, headers only: unzip the `boost\` folder from the release archive at boost.io (for example to
@@ -105,7 +105,7 @@ falls back to a click for a control that cannot be pressed any other way.
 ## Packaging
 
 `make-installer.ps1` builds the app with `build.ps1` (unless `-SkipBuild` is given), then compiles
-`installer\KettleLogic.iss` with Inno Setup 6 into `dist\`. The steps, the signing option, and the update entry are in
+`installer\KettleLogic.iss` with Inno Setup 7 into `dist\`. The steps, the signing option, and the update entry are in
 [Packaging: Windows (Inno Setup installer)](../../README.md#packaging-windows-inno-setup-installer) in the top-level README.
 
 ## What has been checked
@@ -119,7 +119,7 @@ falls back to a click for a control that cannot be pressed any other way.
 - **Built and run on Windows:** `KettleLogic/` builds with Visual Studio 2026 (MSVC 14.51, Windows SDK 10.0.26100, Windows
   App SDK 1.6) in Debug, and `tests\smoke.ps1` walks every screen with no crash and no missing control. The engine and the
   app logic pass their tests under MSVC with `/W4 /WX`.
-- **Not checked:** the Release configuration, ARM64, Visual Studio 2022, the installer, and the screens' details against
+- **Not checked:** the Release configuration, ARM64, the installer, and the screens' details against
   the macOS app. The smoke test shows that every screen opens and takes input, not that every number and label is right.
   Compare each screen with the macOS app.
 

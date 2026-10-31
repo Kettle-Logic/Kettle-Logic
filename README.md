@@ -76,7 +76,7 @@ On Fedora:
 sudo dnf install gcc-c++ cmake boost-devel python3-jsonschema
 ```
 
-On Windows, from a Developer PowerShell for Visual Studio 2022 (see [Windows](#windows-winui-3-with-c-winrt) for the install list), with Boost from vcpkg:
+On Windows, from a Developer PowerShell for Visual Studio 2026 (see [Windows](#windows-winui-3-with-c-winrt) for the install list), with Boost from vcpkg:
 
 ```powershell
 vcpkg install boost-headers
@@ -95,7 +95,7 @@ ctest --test-dir build/core --output-on-failure
 On Windows, the Visual Studio generator is multi-config, so the build and test steps name the configuration:
 
 ```powershell
-cmake -S core -B build\core -G "Visual Studio 17 2022" -A x64
+cmake -S core -B build\core -G "Visual Studio 18 2026" -A x64
 cmake --build build\core --config Release
 ctest --test-dir build\core -C Release --output-on-failure
 ```
@@ -267,7 +267,7 @@ without the C facade. Its portable half builds and is tested on any platform. Th
 yet. See [apps/windows/README.md](apps/windows/README.md) for the setup, what has been checked, and how it differs from the
 Mac app.
 
-Requirements: Visual Studio 2022 17.8 or newer, with "Desktop development with C++" and "Windows application development"; CMake
+Requirements: Visual Studio 2026, with "Desktop development with C++" and "Windows application development"; CMake
 3.25 or newer and NuGet on the path (a Developer PowerShell has both with Visual Studio); and Boost 1.80 or newer, headers
 only (`vcpkg install boost-headers`). Then, from a Developer PowerShell in the repository root:
 
@@ -281,7 +281,7 @@ The script compiles the engine into `build\windows-logic`, runs its tests, then 
 #### Packaging: Windows (Inno Setup installer)
 
 The installer is built on Windows, from `apps\windows\installer\KettleLogic.iss`, by `apps\windows\make-installer.ps1`. You
-need Visual Studio 2022 with the C++ and WinUI workloads (the same as `build.ps1`), and Inno Setup 6 from
+need Visual Studio 2026 with the C++ and WinUI workloads (the same as `build.ps1`), and Inno Setup 7 from
 https://jrsoftware.org/isinfo.php. The app is self-contained, so the Windows App SDK runtime is included in the installer.
 
 From a Developer PowerShell, in the repository root:
@@ -305,7 +305,7 @@ never deletes user data: recipes stay in `%USERPROFILE%\KettleLogic\Recipes`, an
 `%LOCALAPPDATA%\KettleLogic`. Publishing the installer and its update entry is in
 [docs/updates.md](docs/updates.md#publishing-a-windows-or-linux-release).
 
-The installer script has not been compiled yet. It needs a Windows machine with Inno Setup 6.
+The installer script has not been compiled yet. It needs a Windows machine with Inno Setup 7.
 
 ## License
 

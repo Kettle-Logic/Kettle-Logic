@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-  Builds the Windows installer, KettleLogic-Setup-<version>-<arch>.exe in dist\, with Inno Setup 6.
+  Builds the Windows installer, KettleLogic-Setup-<version>-<arch>.exe in dist\, with Inno Setup 7.
 
 .DESCRIPTION
   Builds the app with build.ps1, then compiles installer\KettleLogic.iss. The version is read from
   KettleLogic.Paths.props, so the installer and the app agree. Run it from a Developer PowerShell, on Windows, after
-  installing Inno Setup 6 (https://jrsoftware.org/isinfo.php).
+  installing Inno Setup 7 (https://jrsoftware.org/isinfo.php).
 
   With -SignCommand, the installer and its uninstaller are signed. Give the command with $f where the file goes, for
   example:
@@ -48,15 +48,15 @@ if (-not $version) { throw 'KettleLogicUiVersion is not set in KettleLogic.Paths
 # 3. Inno Setup.
 if (-not $Iscc) {
     $candidates = @(
-        (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
-        (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
+        (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 7\ISCC.exe'),
+        (Join-Path $env:ProgramFiles 'Inno Setup 7\ISCC.exe')
     )
     $Iscc = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
     if (-not $Iscc) {
         $Iscc = (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
     }
 }
-if (-not $Iscc) { throw 'Inno Setup 6 was not found. Install it, or pass -Iscc with the path to ISCC.exe.' }
+if (-not $Iscc) { throw 'Inno Setup 7 was not found. Install it, or pass -Iscc with the path to ISCC.exe.' }
 
 $arch = $Platform.ToLowerInvariant()
 $dist = Join-Path $root 'dist'

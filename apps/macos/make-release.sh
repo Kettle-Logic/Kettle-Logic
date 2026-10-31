@@ -31,7 +31,8 @@ fi
 if [ -n "${APP:-}" ]; then
     app="$APP"
     if [ -z "${NOTARY_PROFILE:-}" ]; then
-        echo "Warning: NOTARY_PROFILE is not set, so the app is not notarized. Users who download it will see a warning." >&2
+        echo "NOTARY_PROFILE is not set, so the app and DMG cannot be notarized. Set it up with: xcrun notarytool store-credentials kettlelogic" >&2
+        exit 1
     fi
 else
     echo "Warning: no APP given, so this builds and signs the app from the command line. For a release, export it from Xcode." >&2
@@ -53,7 +54,7 @@ fi
 codesign --verify --deep --strict "$app"
 
 # Notarize the app first: stapling changes it, so the update zip has to come after.
-if [ -n "${NOTARY_PROFILE:-}" ] && [ -n "${APP:-}" ]; then
+if [ -n "${APP:-}" ]; then
     sh "$here/notarize.sh" "$app"
 fi
 
@@ -73,7 +74,11 @@ engine_file="KettleLogic-engine-$engine_version-macos.dylib"
 ditto -c -k --keepParent "$app" "$out/$app_zip"
 cp "$app/Contents/Frameworks/libkettlelogic_engine.dylib" "$out/$engine_file"
 sh "$here/make-dmg.sh" "$app" "$out/$dmg"
-if [ -n "${NOTARY_PROFILE:-}" ] && [ -n "${APP:-}" ]; then
+if [ -n "${APP:-}" ]; then
+    if [ -z "${SIGN_IDENTITY:-}" ] || [ "$SIGN_IDENTITY" = "-" ]; then
+        echo "SIGN_IDENTITY is not set, and the DMG must be signed with a Developer ID to be notarized." >&2
+        exit 1
+    fi
     sh "$here/notarize.sh" "$out/$dmg"
 fi
 

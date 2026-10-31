@@ -260,7 +260,7 @@ python3 tools/update_manifest.py updates.json linux --version 0.2.0 \
 - The Linux app was run against a local list behind a redirect, the way GitHub serves its download links, and libsoup
   followed the redirect and read the list. The offer dialog was rendered in the smoke test.
 - The Windows code (WinHTTP, the PowerShell signature check, and the WinUI dialog) has not been compiled or run. It needs
-  a Windows machine with Visual Studio 2022 and the Windows App SDK, using `apps\windows\build.ps1`.
+  a Windows machine with Visual Studio 2026 and the Windows App SDK, using `apps\windows\build.ps1`.
 
 ## Publishing a release
 
@@ -304,6 +304,33 @@ The notarytool keychain profile is set up once with `xcrun notarytool store-cred
 Without `APP`, the release script builds the app from the command line, signed ad hoc. That path cannot be notarized,
 so use it for testing only.
 
+### Including the DMG disk image
+
+`make-release.sh` always makes the DMG; there is no switch to turn it on. It calls `make-dmg.sh` after the update zip is
+made, and names the file `KettleLogic-<version>-macos.dmg` in `apps/macos/build/release`. To get a DMG that people can
+open without a Gatekeeper warning:
+
+1. **Give it a Developer ID.** Set `SIGN_IDENTITY="Developer ID Application: Your Name (YOUR_TEAM_ID)"`. `make-dmg.sh`
+   signs the finished image with it. Left unset, or set to `-`, the DMG is not signed.
+2. **Notarize it.** Whenever `APP` is given, the script notarizes the app and then the DMG (`notarize.sh`), and staples
+   the tickets. It stops before building if `NOTARY_PROFILE` is not set, and before notarizing the DMG if `SIGN_IDENTITY`
+   is not set. Without `APP` (the ad hoc test build), nothing is notarized.
+3. **Publish it.** With `PUBLISH=1`, the DMG is attached to the `app-v<version>` release, next to the update zip.
+   If that release already exists, nothing is uploaded, so bump the version for a new DMG. The DMG is not listed in
+   `updates.json`: the in-app update uses the zip, and the DMG is only for first installs.
+
+To build only the DMG from an app you already have, run the script directly:
+
+```sh
+SIGN_IDENTITY="Developer ID Application: Your Name (YOUR_TEAM_ID)" \
+  sh apps/macos/make-dmg.sh /path/to/KettleLogic.app apps/macos/build/release/KettleLogic-0.2.0-macos.dmg
+NOTARY_PROFILE=kettlelogic sh apps/macos/notarize.sh apps/macos/build/release/KettleLogic-0.2.0-macos.dmg
+```
+
+The DMG window shows `dmg-background.png` and `dmg-background@2x.png` from `apps/macos/`. If either is missing, the DMG
+is made without a background. Laying out the window asks Finder to run, so the first build may prompt to let Terminal
+control Finder, and it needs a logged-in desktop session. `*.dmg` is in `.gitignore`, so the image is never committed.
+
 ## Your data and reinstalling
 
 The installers do not write into user data, because user data is never stored where an installer puts the program.
@@ -311,7 +338,7 @@ The installers do not write into user data, because user data is never stored wh
 | Platform | Program | Recipes | Settings and custom data |
 |---|---|---|---|
 | macOS (DMG) | `/Applications/KettleLogic.app` | `~/KettleLogic/Recipes` | Preferences, under the bundle ID `com.kettlelogic.KettleLogic`. Custom ingredients, equipment, and water profiles in `~/Library/Application Support/KettleLogic/`. Installed engines in the same folder, under `Engines/`. |
-| Windows (InnoSetup, planned) | `%ProgramFiles%\KettleLogic` | `%USERPROFILE%\KettleLogic\Recipes` | `%LOCALAPPDATA%\KettleLogic` (`settings.json`, `custom-*.json`, `water-profiles.json`) |
+| Windows (Inno Setup, planned) | `%ProgramFiles%\KettleLogic` | `%USERPROFILE%\KettleLogic\Recipes` | `%LOCALAPPDATA%\KettleLogic` (`settings.json`, `custom-*.json`, `water-profiles.json`) |
 | Linux (Flatpak, planned) | `/app`, read-only, from the runtime | `~/KettleLogic/Recipes`, which the Flatpak needs permission to reach | `~/.var/app/<app-id>/data/KettleLogic`, the Flatpak's own data folder |
 
 What a reinstall or upgrade does with this:
@@ -320,7 +347,7 @@ What a reinstall or upgrade does with this:
   Support folder are untouched. One thing to know: an installed engine is kept after an app is replaced, and the loader
   uses the newest engine it can load. An older app therefore may run a newer installed engine. That is safe when the
   interface numbers match. When they do not, the engine is skipped and the app's own copy is used.
-- **Windows.** The InnoSetup script must use one fixed `AppId`, so a new installer upgrades the program in place. It must
+- **Windows.** The Inno Setup script must use one fixed `AppId`, so a new installer upgrades the program in place. It must
   not delete the data folder. Uninstalling should leave `%LOCALAPPDATA%\KettleLogic` and the recipes alone, or ask first.
 - **Linux.** Flatpak updates replace `/app` and keep `~/.var/app/<app-id>/data`. Removing the app keeps the data unless
   the user runs `flatpak uninstall --delete-data`.

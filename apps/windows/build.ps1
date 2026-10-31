@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Builds Kettle Logic for Windows: the engine and the app's portable logic with CMake, then the WinUI 3 app with
-  MSBuild. Run it from a Developer PowerShell for Visual Studio 2022 or 2026.
+  MSBuild. Run it from a Developer PowerShell for Visual Studio 2026.
 
 .EXAMPLE
   .\apps\windows\build.ps1 -Configuration Release -BoostRoot C:\boost
@@ -29,15 +29,11 @@ function Invoke-Step([string] $Name, [scriptblock] $Command) {
     }
 }
 
-# The newest Visual Studio that this CMake can generate for, with the MSVC toolset that goes with it.
-$generators = @(
-    @{ Name = 'Visual Studio 18 2026'; Toolset = 'v145' },
-    @{ Name = 'Visual Studio 17 2022'; Toolset = 'v143' }
-)
+# Visual Studio 2026, with the MSVC toolset that goes with it.
+$vs = @{ Name = 'Visual Studio 18 2026'; Toolset = 'v145' }
 $cmakeHelp = (cmake --help) -join "`n"
-$vs = $generators | Where-Object { $cmakeHelp -match [regex]::Escape($_.Name) } | Select-Object -First 1
-if (-not $vs) {
-    throw 'This CMake has no Visual Studio 2022 or 2026 generator. Run this from a Developer PowerShell for Visual Studio.'
+if ($cmakeHelp -notmatch [regex]::Escape($vs.Name)) {
+    throw 'This CMake has no Visual Studio 2026 generator. Run this from a Developer PowerShell for Visual Studio 2026.'
 }
 Write-Host "Using $($vs.Name) ($($vs.Toolset))."
 

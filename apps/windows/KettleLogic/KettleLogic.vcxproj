@@ -15,7 +15,7 @@
     <ProjectName>KettleLogic</ProjectName>
     <RootNamespace>KettleLogic</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion>18.0</MinimumVisualStudioVersion>
     <AppContainerApplication>false</AppContainerApplication>
     <AppxPackage>false</AppxPackage>
     <ApplicationType>Windows Store</ApplicationType>
