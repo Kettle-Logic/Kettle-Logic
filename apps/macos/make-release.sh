@@ -53,6 +53,18 @@ if [ "$(plist KLUpdateManifestURL)" != "$manifest_url" ]; then
 fi
 codesign --verify --deep --strict "$app"
 
+# The DMG is signed with SIGN_IDENTITY, so check it exists now, not after the app has waited on notarization.
+if [ -n "${APP:-}" ]; then
+    if [ -z "${SIGN_IDENTITY:-}" ] || [ "$SIGN_IDENTITY" = "-" ]; then
+        echo "SIGN_IDENTITY is not set, and the DMG must be signed with a Developer ID to be notarized." >&2
+        exit 1
+    fi
+    if ! security find-identity -v -p codesigning | grep -F -q "$SIGN_IDENTITY"; then
+        echo "No signing identity matches \"$SIGN_IDENTITY\" in the keychain. Run: security find-identity -v -p codesigning" >&2
+        exit 1
+    fi
+fi
+
 # Notarize the app first: stapling changes it, so the update zip has to come after.
 if [ -n "${APP:-}" ]; then
     sh "$here/notarize.sh" "$app"
@@ -75,10 +87,6 @@ ditto -c -k --keepParent "$app" "$out/$app_zip"
 cp "$app/Contents/Frameworks/libkettlelogic_engine.dylib" "$out/$engine_file"
 sh "$here/make-dmg.sh" "$app" "$out/$dmg"
 if [ -n "${APP:-}" ]; then
-    if [ -z "${SIGN_IDENTITY:-}" ] || [ "$SIGN_IDENTITY" = "-" ]; then
-        echo "SIGN_IDENTITY is not set, and the DMG must be signed with a Developer ID to be notarized." >&2
-        exit 1
-    fi
     sh "$here/notarize.sh" "$out/$dmg"
 fi
 
