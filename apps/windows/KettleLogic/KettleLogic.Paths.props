@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Where the engine and the app's portable logic are, relative to this project. -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Optional, not in git: this machine's settings, for builds from the Visual Studio IDE, which does not see a
+       BOOST_ROOT set in a shell. It can set BoostRoot to the folder that holds boost\. -->
+  <Import Project="KettleLogic.Local.props" Condition="Exists('KettleLogic.Local.props')" />
   <PropertyGroup>
     <!-- The app's own version, shown in About Kettle Logic. The engine's version is kettlelogic/version.hpp. -->
     <KettleLogicUiVersion>0.1.0</KettleLogicUiVersion>

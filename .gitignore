@@ -111,3 +111,6 @@ desktop.ini
 
 # macOS
 .DS_Store
+
+# Per-machine Visual Studio settings, such as BoostRoot (see apps/windows/KettleLogic/KettleLogic.Paths.props)
+*.Local.props

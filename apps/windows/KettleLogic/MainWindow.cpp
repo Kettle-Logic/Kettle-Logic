@@ -210,8 +210,10 @@ void MainWindow::BuildMenu() {
     saveAsItem_ = withKey(MenuItem("Save As…", [this] { SaveAs(); }), VirtualKey::S, controlShift);
     file.Items().Append(saveAsItem_);
     file.Items().Append(ctl::MenuFlyoutSeparator());
-    file.Items().Append(withKey(MenuItem("Settings…", [this] { dialogs::ShowSettings(host_); }),
-                                static_cast<VirtualKey>(0xBC), control));  // the comma key
+    // Ctrl+, is registered in AddAccelerators. As a menu accelerator it crashes WinUI when the menu draws its text.
+    const auto settingsItem = MenuItem("Settings…", [this] { dialogs::ShowSettings(host_); });
+    settingsItem.KeyboardAcceleratorTextOverride(L"Ctrl+,");
+    file.Items().Append(settingsItem);
     menuBar_.Items().Append(file);
 
     ctl::MenuBarItem edit;
@@ -272,6 +274,14 @@ void MainWindow::AddAccelerators() {
         });
         root_.KeyboardAccelerators().Append(accelerator);
     }
+
+    // Ctrl+, opens Settings. 0xBC is the comma key, which VirtualKey has no name for.
+    auto settings = Accelerator(static_cast<VirtualKey>(0xBC), VirtualKeyModifiers::Control);
+    settings.Invoked([this](auto const&, xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args) {
+        args.Handled(true);
+        dialogs::ShowSettings(host_);
+    });
+    root_.KeyboardAccelerators().Append(settings);
 }
 
 // MARK: Layout
