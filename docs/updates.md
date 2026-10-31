@@ -45,7 +45,7 @@ Each release is a set of GitHub release assets:
 - `engine-v<version>`: the engine, `KettleLogic-engine-<version>-macos.dylib`.
 - `updates`: a pre-release that holds one file, `updates.json`. Its address is fixed, so the apps can always find it:
 
-      https://github.com/kettle-logic/kettle-logic/releases/download/updates/updates.json
+      https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json
 
 The address is baked into the app at build time. Set `UPDATE_MANIFEST_URL` when you run `make-app.sh`. Left empty, the
 build has no update address, and the app says so when asked to check.
@@ -58,13 +58,13 @@ build has no update address, and the app says so when asked to check.
   "app": {
     "version": "0.2.0",
     "engineAbi": 1,
-    "url": "https://github.com/kettle-logic/kettle-logic/releases/download/app-v0.2.0/KettleLogic-0.2.0-macos.zip",
+    "url": "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/app-v0.2.0/KettleLogic-0.2.0-macos.zip",
     "sha256": "..."
   },
   "engine": {
     "version": "0.2.1",
     "abi": 1,
-    "url": "https://github.com/kettle-logic/kettle-logic/releases/download/engine-v0.2.1/KettleLogic-engine-0.2.1-macos.dylib",
+    "url": "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/engine-v0.2.1/KettleLogic-engine-0.2.1-macos.dylib",
     "sha256": "..."
   }
 }
@@ -74,6 +74,116 @@ build has no update address, and the app says so when asked to check.
 - `engine.abi` is the interface number of the engine. The app offers it only when the number matches its own.
 - Either part can be absent. A reader stops on a manifest with a schema newer than it knows.
 - Versions are `major.minor.patch` numbers. Pre-release tags are not supported.
+
+## First-time setup: creating updates.json on GitHub
+
+Do this once, for all platforms. Until it is done, every update check fails, because the address the apps read does not
+exist yet. On Windows and Linux that is "the update server answered with status 404". On macOS it is "The list of updates
+could not be read."
+
+`updates.json` is not a file in the repository. It is an asset of a GitHub release whose tag is `updates`. The tag never
+changes, so the address never changes:
+
+    https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json
+
+Replacing the asset on that release is how a new version is announced. Do not commit it to the repository
+(`/updates.json` is in `.gitignore`), and do not use the `raw.githubusercontent.com` address: the apps expect the
+release-asset address. Never delete the `updates` release. The address is built into every app already installed, so
+deleting it brings the failure back for all of them.
+
+All three apps read the same list. Each platform has its own entry, and a platform with no entry is simply told it is
+up to date:
+
+| Entry | Read by | Needs | `url` is |
+|---|---|---|---|
+| `app`, `engine` | macOS | `sha256`; `app` also `engineAbi`, `engine` also `abi` | the zip, and the `.dylib` |
+| `windows` | Windows | `sha256` | the installer's own download address |
+| `linux` | Linux | no `sha256` | the release page |
+
+An app is offered an entry only when its `version` is higher than the running app's (`kAppVersion`, 0.1.0 for now).
+
+**One-time preparation (any platform).** Install the `gh` tool from <https://cli.github.com> and run `gh auth login`
+with an account that can write to the repository.
+
+### macOS
+
+`apps/macos/make-release.sh` does all of it. With `PUBLISH=1` it uploads the app and engine releases, **creates the
+`updates` pre-release if it does not exist**, and uploads `updates.json` into it. If no list is published yet, it says
+"No update list is published yet, so a new one is started" and writes `app` and `engine` entries. Follow the steps under
+[Publishing a release](#publishing-a-release).
+
+### Windows
+
+1. Build the installer with `apps\windows\make-installer.ps1`, which prints the commands below with the right file names.
+2. Publish it. The release tag is `app-v<version>`:
+
+   ```sh
+   gh release create app-v0.2.0 dist\KettleLogic-Setup-0.2.0-x64.exe --repo Kettle-Logic/Kettle-Logic ^
+     --title "Kettle Logic 0.2.0" --notes "What changed."
+   ```
+
+3. Write the list. The tool records the installer's SHA-256, which the Windows entry needs:
+
+   ```sh
+   python tools\update_manifest.py updates.json windows --version 0.2.0 ^
+     --url https://github.com/Kettle-Logic/Kettle-Logic/releases/download/app-v0.2.0/KettleLogic-Setup-0.2.0-x64.exe ^
+     --file dist\KettleLogic-Setup-0.2.0-x64.exe
+   ```
+
+### Linux
+
+There is no installer to upload: the Flatpak runtime installs the app, and the offer only tells the user to run
+`flatpak update org.kettlelogic.KettleLogic`. Publish the release, then write the entry with no `--file`:
+
+```sh
+gh release create app-v0.2.0 --repo Kettle-Logic/Kettle-Logic --title "Kettle Logic 0.2.0" --notes "What changed."
+python3 tools/update_manifest.py updates.json linux --version 0.2.0 \
+  --url https://github.com/Kettle-Logic/Kettle-Logic/releases/tag/app-v0.2.0
+```
+
+### Creating the `updates` release (Windows and Linux)
+
+Once `updates.json` exists, create the release. It is a pre-release, so it never shows as the repository's latest:
+
+```sh
+gh release create updates updates.json --repo Kettle-Logic/Kettle-Logic --prerelease ^
+  --title "Update list" --notes "Where Kettle Logic looks for updates. Do not delete this release."
+```
+
+The result looks like this (`windows` and `linux` can be in the same file):
+
+```json
+{
+  "schema": 1,
+  "windows": {
+    "version": "0.2.0",
+    "url": "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/app-v0.2.0/KettleLogic-Setup-0.2.0-x64.exe",
+    "sha256": "<64 lowercase hex digits>"
+  },
+  "linux": {
+    "version": "0.2.0",
+    "url": "https://github.com/Kettle-Logic/Kettle-Logic/releases/tag/app-v0.2.0"
+  }
+}
+```
+
+### Check it
+
+Open the address above in a browser: it should download `updates.json`. Then use Check for Updates in an app older than
+the listed version. It should offer the update, and an app at the listed version says that it is up to date.
+
+### Later releases
+
+Fetch the published list, add the new entry, and replace the asset. The other platforms' entries stay. For Windows and
+Linux, see [Publishing a Windows or Linux release](#publishing-a-windows-or-linux-release). macOS does it in
+`make-release.sh`.
+
+### Testing a list before publishing it
+
+Serve a folder that holds `updates.json` (`python3 -m http.server`) and point a build at it:
+
+- Windows and Linux: `-DKETTLELOGIC_UPDATE_MANIFEST_URL=http://localhost:8000/updates.json` when configuring CMake.
+- macOS: `UPDATE_MANIFEST_URL=http://localhost:8000/updates.json` when running `make-app.sh`.
 
 ## What the app does
 
@@ -126,19 +236,19 @@ follows:
 ### Publishing a Windows or Linux release
 
 Both start from the list already published, so the other platforms' entries stay. Fetch it with
-`gh release download updates --repo kettle-logic/kettle-logic --pattern updates.json` first.
+`gh release download updates --repo Kettle-Logic/Kettle-Logic --pattern updates.json` first.
 
 ```sh
 # Windows, on the Windows machine that built the signed installer
 python tools\update_manifest.py updates.json windows --version 0.2.0 ^
-  --url https://github.com/kettle-logic/kettle-logic/releases/download/app-v0.2.0/KettleLogic-Setup-0.2.0-x64.exe ^
+  --url https://github.com/Kettle-Logic/Kettle-Logic/releases/download/app-v0.2.0/KettleLogic-Setup-0.2.0-x64.exe ^
   --file dist\KettleLogic-Setup-0.2.0-x64.exe
-gh release upload app-v0.2.0 dist\KettleLogic-Setup-0.2.0-x64.exe --repo kettle-logic/kettle-logic
-gh release upload updates updates.json --clobber --repo kettle-logic/kettle-logic
+gh release upload app-v0.2.0 dist\KettleLogic-Setup-0.2.0-x64.exe --repo Kettle-Logic/Kettle-Logic
+gh release upload updates updates.json --clobber --repo Kettle-Logic/Kettle-Logic
 
 # Linux, once the Flatpak is published (no file: the runtime installs it)
 python3 tools/update_manifest.py updates.json linux --version 0.2.0 \
-  --url https://github.com/kettle-logic/kettle-logic/releases/tag/app-v0.2.0
+  --url https://github.com/Kettle-Logic/Kettle-Logic/releases/tag/app-v0.2.0
 ```
 
 `tools/update_manifest.py` writes the entry for one platform and keeps the rest. The macOS `make-release.sh` uses it too.
@@ -179,7 +289,7 @@ download it are not blocked by Gatekeeper.
    they do not. It then notarizes and staples the app (`notarize.sh`), makes the update zip, makes the DMG
    (`make-dmg.sh`), signs and notarizes the DMG, and writes `updates.json`. Everything is in
    `apps/macos/build/release`.
-4. **Publish.** Add `PUBLISH=1`, with the `gh` tool signed in to `kettle-logic/kettle-logic`:
+4. **Publish.** Add `PUBLISH=1`, with the `gh` tool signed in to `Kettle-Logic/Kettle-Logic`:
 
    ```sh
    PUBLISH=1 APP=... NOTARY_PROFILE=... SIGN_IDENTITY=... sh apps/macos/make-release.sh

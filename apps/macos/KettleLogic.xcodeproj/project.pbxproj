@@ -261,7 +261,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				KL_ENGINE_VERSION = 0.1.0;
-				KL_UPDATE_MANIFEST_URL = "https://github.com/kettle-logic/kettle-logic/releases/download/updates/updates.json";
+				KL_UPDATE_MANIFEST_URL = "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../build/core";
 				MARKETING_VERSION = 0.1.0;
@@ -295,7 +295,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				KL_ENGINE_VERSION = 0.1.0;
-				KL_UPDATE_MANIFEST_URL = "https://github.com/kettle-logic/kettle-logic/releases/download/updates/updates.json";
+				KL_UPDATE_MANIFEST_URL = "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../build/core";
 				MARKETING_VERSION = 0.1.0;

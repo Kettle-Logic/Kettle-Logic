@@ -19,7 +19,7 @@ inline constexpr const char* kAppVersion = "0.1.0";
 inline constexpr const char* kManifestUrl = KETTLELOGIC_UPDATE_MANIFEST_URL;
 #else
 inline constexpr const char* kManifestUrl =
-    "https://github.com/kettle-logic/kettle-logic/releases/download/updates/updates.json";
+    "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json";
 #endif
 
 // A semantic version: major.minor.patch, the numbers only.

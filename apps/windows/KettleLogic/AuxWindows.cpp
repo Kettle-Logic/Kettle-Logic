@@ -327,6 +327,12 @@ HelpWindow::HelpWindow(Host& host, std::function<void(HelpWindow*)> closed) : ho
     } catch (winrt::hresult_error const&) {
     }
     window_.Closed([this, closed = std::move(closed)](auto const&, auto const&) {
+        // The web view has to be closed explicitly, or releasing it with the window raises an exception.
+        *alive_ = false;
+        try {
+            web_.Close();
+        } catch (winrt::hresult_error const&) {
+        }
         window_.DispatcherQueue().TryEnqueue([this, closed] { closed(this); });
     });
 }

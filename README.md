@@ -187,7 +187,7 @@ and notarization are then run by the release scripts:
    zip and the DMG (`apps/macos/make-dmg.sh`), notarizes the DMG, and writes `updates.json`. The files are in
    `apps/macos/build/release`: `KettleLogic-<version>-macos.zip`, `KettleLogic-<version>-macos.dmg`,
    `KettleLogic-engine-<engine version>-macos.dylib`, and `updates.json`.
-4. To publish, add `PUBLISH=1` to the same command. It uploads the files with the `gh` tool to `kettle-logic/kettle-logic`
+4. To publish, add `PUBLISH=1` to the same command. It uploads the files with the `gh` tool to `Kettle-Logic/Kettle-Logic`
    and replaces `updates.json`. Without it, the files are only built.
 
 The DMG is the installer. Users drag the app into Applications. Recipes and settings are not in the app, so they are kept

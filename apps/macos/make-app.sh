@@ -14,7 +14,7 @@ app_build="1"
 
 # Where the app looks for updates: the update list on GitHub. Set UPDATE_MANIFEST_URL to use another, or to an empty
 # string for a build with no update address.
-update_manifest_url="${UPDATE_MANIFEST_URL-https://github.com/kettle-logic/kettle-logic/releases/download/updates/updates.json}"
+update_manifest_url="${UPDATE_MANIFEST_URL-https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json}"
 
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$here/../.."

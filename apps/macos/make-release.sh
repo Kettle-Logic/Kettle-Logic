@@ -7,14 +7,14 @@
 # signed ad hoc, and cannot be notarized, so it is only for testing.
 #
 #   APP=/path/to/Exported/KettleLogic.app NOTARY_PROFILE=kettlelogic SIGN_IDENTITY="Developer ID Application: ..." \
-#     REPO=kettle-logic/kettle-logic sh make-release.sh                       build into apps/macos/build/release
+#     REPO=Kettle-Logic/Kettle-Logic sh make-release.sh                       build into apps/macos/build/release
 #   ... PUBLISH=1 sh make-release.sh                                          also publish with the gh tool
 #
 # Bump the version in Xcode (MARKETING_VERSION), and in core/include/kettlelogic/version.hpp for the engine, before a
 # release. The script stops if the app's version files disagree with each other.
 set -e
 
-repo="${REPO:-kettle-logic/kettle-logic}"
+repo="${REPO:-Kettle-Logic/Kettle-Logic}"
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$here/../.."
 out="$here/build/release"
