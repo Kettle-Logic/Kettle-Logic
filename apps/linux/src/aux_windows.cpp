@@ -75,20 +75,19 @@ BrewDayWindow::BrewDayWindow(Host& host, BrewDayPlan plan, std::function<void(Br
     displayLock_.Set(GTK_WINDOW(window_), host_.store.preferences.boolean(PrefKey::keepDisplayOn));
 
     auto* tick = new std::pair<BrewDayWindow*, std::shared_ptr<bool>>(this, alive_);
-    timer_ = g_timeout_add_seconds(
-        1,
+    // The timer owns its data, so a tick that arrives after the window is gone still reads live memory, sees the
+    // flag cleared, and removes the timer.
+    timer_ = g_timeout_add_seconds_full(
+        G_PRIORITY_DEFAULT, 1,
         [](gpointer data) -> gboolean {
             auto* pair = static_cast<std::pair<BrewDayWindow*, std::shared_ptr<bool>>*>(data);
             if (!*pair->second) return G_SOURCE_REMOVE;
             pair->first->Tick();
             return G_SOURCE_CONTINUE;
         },
-        tick);
+        tick,
+        [](gpointer data) { delete static_cast<std::pair<BrewDayWindow*, std::shared_ptr<bool>>*>(data); });
     g_source_set_name_by_id(timer_, "kl-brew-day-timer");
-    // The timer's data is freed with the window, not before.
-    g_object_set_data_full(G_OBJECT(window_), "kl-tick", tick, [](gpointer data) {
-        delete static_cast<std::pair<BrewDayWindow*, std::shared_ptr<bool>>*>(data);
-    });
 
     ReportClosed<BrewDayWindow>(window_, this, std::move(closed));
     Rebuild();

@@ -166,9 +166,10 @@ void readList(Fields& f, std::string_view key, std::vector<T>& out, Reader reade
     if (v == nullptr) {
         return;
     }
-    const Array& items = expectArray(*v, f.child(key));
+    const std::string pointer = f.child(key);
+    const Array& items = expectArray(*v, pointer);
     for (std::size_t i = 0; i < items.size(); ++i) {
-        out.push_back(reader(items[i], f.child(key) + "/" + std::to_string(i)));
+        out.push_back(reader(items[i], pointer + "/" + std::to_string(i)));
     }
 }
 
@@ -481,9 +482,10 @@ Mash readMash(const Value& v, const std::string& pointer, Document& doc) {
     m.grainTemperature = reqQuantity(f, "grain_temperature", kTemperature);
     m.notes = optString(f, "notes");
     const Value& steps = f.require("mash_steps");
-    const Array& items = expectArray(steps, f.child("mash_steps"));
+    const std::string stepsPointer = f.child("mash_steps");
+    const Array& items = expectArray(steps, stepsPointer);
     for (std::size_t i = 0; i < items.size(); ++i) {
-        m.steps.push_back(readMashStep(items[i], f.child("mash_steps") + "/" + std::to_string(i), doc));
+        m.steps.push_back(readMashStep(items[i], stepsPointer + "/" + std::to_string(i), doc));
     }
     f.finish(m.preserved, schema::kMashProcedure);
     return m;
@@ -515,10 +517,11 @@ Fermentation readFermentation(const Value& v, const std::string& pointer, Docume
     fermentation.description = optString(f, "description");
     fermentation.notes = optString(f, "notes");
     const Value& steps = f.require("fermentation_steps");
-    const Array& items = expectArray(steps, f.child("fermentation_steps"));
+    const std::string stepsPointer = f.child("fermentation_steps");
+    const Array& items = expectArray(steps, stepsPointer);
     for (std::size_t i = 0; i < items.size(); ++i) {
         fermentation.steps.push_back(readFermentationStep(
-            items[i], f.child("fermentation_steps") + "/" + std::to_string(i), doc));
+            items[i], stepsPointer + "/" + std::to_string(i), doc));
     }
     f.finish(fermentation.preserved, schema::kFermentationProcedure);
     return fermentation;
