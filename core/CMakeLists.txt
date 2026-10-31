@@ -6,7 +6,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Boost is used header-only (multiprecision). No compiled Boost libraries.
-find_package(Boost 1.80 REQUIRED)
+# If BOOST_ROOT holds a boost\ folder of headers (the official zip, or vcpkg's include folder), use it directly. A
+# find_package search can pick up another install, such as MSYS2's MinGW Boost on PATH, whose headers break MSVC builds.
+if(NOT BOOST_ROOT AND DEFINED ENV{BOOST_ROOT})
+    set(BOOST_ROOT "$ENV{BOOST_ROOT}")
+endif()
+if(BOOST_ROOT AND EXISTS "${BOOST_ROOT}/boost/version.hpp")
+    file(STRINGS "${BOOST_ROOT}/boost/version.hpp" boost_version_line REGEX "^#define BOOST_VERSION [0-9]+")
+    string(REGEX REPLACE "^#define BOOST_VERSION ([0-9]+).*" "\\1" boost_version "${boost_version_line}")
+    if(boost_version LESS 108000)
+        message(FATAL_ERROR "Boost 1.80 or newer is required; ${BOOST_ROOT} has BOOST_VERSION ${boost_version}.")
+    endif()
+    add_library(Boost::headers INTERFACE IMPORTED)
+    set_target_properties(Boost::headers PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${BOOST_ROOT}"
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${BOOST_ROOT}")
+    message(STATUS "Boost headers: ${BOOST_ROOT}")
+else()
+    find_package(Boost 1.80 REQUIRED)
+endif()
 
 add_library(kettlelogic_core
     src/json.cpp
@@ -107,17 +125,20 @@ add_test(NAME kettlelogic_core COMMAND kettlelogic_tests)
 
 # The macOS app's loader, the engine's shared library loaded the way the app loads it. The generated loader is
 # checked against the header below, and the test loads the built engine and calls it.
-add_executable(kettlelogic_loader_test tests/loader/test_engine_loader.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../apps/macos/Sources/CKettleLogic/engine_loader.c)
-target_include_directories(kettlelogic_loader_test PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../apps/macos/Sources/CKettleLogic/include)
-target_compile_definitions(kettlelogic_loader_test PRIVATE
-    KETTLELOGIC_ENGINE_PATH="$<TARGET_FILE:kettlelogic_engine>"
-    KETTLELOGIC_PROJECT_VERSION="${PROJECT_VERSION}")
-target_link_libraries(kettlelogic_loader_test PRIVATE ${CMAKE_DL_LIBS})
-add_dependencies(kettlelogic_loader_test kettlelogic_engine)
-add_test(NAME kettlelogic_engine_loader COMMAND kettlelogic_loader_test)
+# It uses dlopen, so it is not built on Windows, where the app loads the engine DLL its own way.
+if(NOT WIN32)
+    add_executable(kettlelogic_loader_test tests/loader/test_engine_loader.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../apps/macos/Sources/CKettleLogic/engine_loader.c)
+    target_include_directories(kettlelogic_loader_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../apps/macos/Sources/CKettleLogic/include)
+    target_compile_definitions(kettlelogic_loader_test PRIVATE
+        KETTLELOGIC_ENGINE_PATH="$<TARGET_FILE:kettlelogic_engine>"
+        KETTLELOGIC_PROJECT_VERSION="${PROJECT_VERSION}")
+    target_link_libraries(kettlelogic_loader_test PRIVATE ${CMAKE_DL_LIBS})
+    add_dependencies(kettlelogic_loader_test kettlelogic_engine)
+    add_test(NAME kettlelogic_engine_loader COMMAND kettlelogic_loader_test)
+endif()
 
 # Checks the writer's output against the vendored BeerJSON schema.
 # Needs Python 3 with the `jsonschema` package.

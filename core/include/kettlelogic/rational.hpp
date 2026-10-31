@@ -40,11 +40,13 @@ public:
 
     bool isInteger() const { return boost::multiprecision::denominator(value_) == 1; }
 
-    friend Rational operator+(const Rational& a, const Rational& b) { return Rational{a.value_ + b.value_}; }
-    friend Rational operator-(const Rational& a, const Rational& b) { return Rational{a.value_ - b.value_}; }
-    friend Rational operator*(const Rational& a, const Rational& b) { return Rational{a.value_ * b.value_}; }
-    friend Rational operator/(const Rational& a, const Rational& b) { return Rational{a.value_ / b.value_}; }
-    friend Rational operator-(const Rational& a) { return Rational{-a.value_}; }
+    // The Exact(...) conversions evaluate Boost's expression templates first. MSVC will not pass them straight to the
+    // explicit constructor.
+    friend Rational operator+(const Rational& a, const Rational& b) { return Rational(Exact(a.value_ + b.value_)); }
+    friend Rational operator-(const Rational& a, const Rational& b) { return Rational(Exact(a.value_ - b.value_)); }
+    friend Rational operator*(const Rational& a, const Rational& b) { return Rational(Exact(a.value_ * b.value_)); }
+    friend Rational operator/(const Rational& a, const Rational& b) { return Rational(Exact(a.value_ / b.value_)); }
+    friend Rational operator-(const Rational& a) { return Rational(Exact(-a.value_)); }
 
     friend bool operator==(const Rational& a, const Rational& b) { return a.value_ == b.value_; }
     friend bool operator<(const Rational& a, const Rational& b) { return a.value_ < b.value_; }

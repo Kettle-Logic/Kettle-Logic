@@ -49,6 +49,8 @@ if(MSVC)
     # The sources hold UTF-8 text, such as "Côte des Blancs".
     target_compile_options(kettlelogic_app_logic PUBLIC /utf-8)
     target_compile_options(kettlelogic_app_logic PRIVATE /W4 /WX)
+    # The sources use standard sscanf, which MSVC flags as deprecated and /WX would turn into an error.
+    target_compile_definitions(kettlelogic_app_logic PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()
     target_compile_options(kettlelogic_app_logic PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()

@@ -28,10 +28,10 @@ struct ToolField {
     // The toggle that must be on for this field to show and to count as an input. Empty: always shown.
     std::string enabledBy;
 
-    // The field shows only while the toggle with `key` is on.
-    ToolField enabled(std::string key) const {
+    // The field shows only while the toggle with `toggleKey` is on.
+    ToolField enabled(std::string toggleKey) const {
         ToolField copy = *this;
-        copy.enabledBy = std::move(key);
+        copy.enabledBy = std::move(toggleKey);
         return copy;
     }
 };
@@ -43,9 +43,9 @@ struct ToolReadout {
     std::string unit;
     std::string enabledBy;
 
-    ToolReadout enabled(std::string key) const {
+    ToolReadout enabled(std::string toggleKey) const {
         ToolReadout copy = *this;
-        copy.enabledBy = std::move(key);
+        copy.enabledBy = std::move(toggleKey);
         return copy;
     }
 };

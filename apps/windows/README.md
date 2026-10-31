@@ -117,7 +117,7 @@ ctest --test-dir build/windows-logic --output-on-failure
 
 ## Open decisions
 
-- C++/WinRT was chosen, as the plan's default. The screens are built in code and not in XAML, so only `App.xaml` and
-  `App.idl` go through the XAML compiler. That keeps the project small and the screens in step with the macOS views, at
+- C++/WinRT was chosen, as the plan's default. The screens are built in code and not in XAML, so only `App.xaml` goes
+  through the XAML compiler. That keeps the project small and the screens in step with the macOS views, at
   the cost of Visual Studio's XAML designer.
 - No application icon is included yet.

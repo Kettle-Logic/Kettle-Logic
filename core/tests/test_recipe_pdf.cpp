@@ -141,10 +141,13 @@ void testWriteFile() {
     const model::Document document{};
     const fs::path file = fs::temp_directory_path() / "kettlelogic-recipe-pdf-test.pdf";
     io::writeRecipePdf(document, recipe, calc::calculate(recipe), file);
-    std::ifstream in(file, std::ios::binary);
-    std::stringstream bytes;
-    bytes << in.rdbuf();
-    CHECK(bytes.str() == io::recipePdf(document, recipe, calc::calculate(recipe)));
+    {
+        // Closed before the remove below: Windows will not delete a file that is still open.
+        std::ifstream in(file, std::ios::binary);
+        std::stringstream bytes;
+        bytes << in.rdbuf();
+        CHECK(bytes.str() == io::recipePdf(document, recipe, calc::calculate(recipe)));
+    }
     fs::remove(file);
 
     CHECK(throws([&] {
@@ -163,10 +166,12 @@ void testCApi() {
 
     const fs::path file = fs::temp_directory_path() / "kettlelogic-recipe-pdf-capi-test.pdf";
     CHECK(kl_recipe_write_pdf(doc, recipe, file.string().c_str(), &error) == 0);
-    std::ifstream in(file, std::ios::binary);
-    std::string head(8, '\0');
-    in.read(head.data(), 8);
-    CHECK(head == "%PDF-1.4");
+    {
+        std::ifstream in(file, std::ios::binary);
+        std::string head(8, '\0');
+        in.read(head.data(), 8);
+        CHECK(head == "%PDF-1.4");
+    }
     fs::remove(file);
 
     CHECK(kl_recipe_write_pdf(doc, recipe, "/nonexistent-folder/recipe.pdf", &error) != 0);

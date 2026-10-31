@@ -1200,6 +1200,8 @@ int kl_set_recipe_currency(kl_document* document, kl_recipe_id recipe, const cha
     });
 }
 
+// extern "C++" because MSVC assumes a function with C linkage does not throw, and this one does.
+extern "C++" {
 namespace {
 
 // A number the user typed, as exact decimal text. Throws if it is not a number.
@@ -1213,6 +1215,7 @@ double typedNumber(const char* text, const char* what) {
 }
 
 }  // namespace
+}  // extern "C++"
 
 char* kl_starter_plan_json(const kl_document* document, kl_recipe_id recipe, int lager,
                            const char* pack_cells_billion, const char* growth_billion_per_liter_plato,

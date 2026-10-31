@@ -378,6 +378,25 @@ void MainWindow::BuildLayout() {
     nav_.SelectionChanged([this](auto const&, ctl::NavigationViewSelectionChangedEventArgs const& args) {
         OnSelectionChanged(args);
     });
+    // A folder that the user opens or closes is remembered, so a rebuild of the sidebar keeps it that way. These
+    // events belong to the NavigationView, not its items, so the folder is found from the item's tag.
+    const auto rememberFolder = [this](ctl::NavigationViewItemBase const& container, bool open) {
+        if (rebuildingSidebar_ || !container) return;
+        const std::vector<std::string> parts = SplitTag(TagOf(container));
+        if (parts.size() < 3 || parts[0] != "f") return;
+        const kettlelogic::app::ItemKey key{parts[1], static_cast<EntityId>(std::stoull(parts[2]))};
+        if (open) {
+            closedFolders_.erase(key);
+        } else {
+            closedFolders_.insert(key);
+        }
+    };
+    nav_.Expanding([rememberFolder](auto const&, auto const& args) {
+        rememberFolder(args.ExpandingItemContainer(), true);
+    });
+    nav_.Collapsed([rememberFolder](auto const&, auto const& args) {
+        rememberFolder(args.CollapsedItemContainer(), false);
+    });
 
     ctl::Grid body;
     ctl::RowDefinition toolbarRow;
@@ -557,8 +576,6 @@ void MainWindow::RebuildSidebar() {
                 }
             }
             item.IsExpanded(closedFolders_.count(folderKey) == 0);
-            item.Expanding([this, folderKey](auto const&, auto const&) { closedFolders_.erase(folderKey); });
-            item.Collapsed([this, folderKey](auto const&, auto const&) { closedFolders_.insert(folderKey); });
             MakeDropTarget(item, doc->id(), folder.id);
 
             if (!folder.trash) {

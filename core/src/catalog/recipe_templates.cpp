@@ -211,10 +211,10 @@ std::vector<std::string> RecipeTemplate::problems() const {
     std::vector<std::string> hopNames;
     for (const TemplateBoilHop& hop : boilHops) hopNames.push_back(hop.name);
     for (const TemplateAromaHop& hop : aromaHops) hopNames.push_back(hop.name);
-    for (const std::string& name : hopNames) {
+    for (const std::string& hopName : hopNames) {
         const auto& all = hops();
-        if (std::none_of(all.begin(), all.end(), [&](const auto& h) { return h.name == name; })) {
-            found.push_back(name + " is not a hop in the catalog.");
+        if (std::none_of(all.begin(), all.end(), [&](const auto& h) { return h.name == hopName; })) {
+            found.push_back(hopName + " is not a hop in the catalog.");
         }
     }
     {

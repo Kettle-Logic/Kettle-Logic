@@ -683,12 +683,12 @@ Document openDocument(std::string_view beerJson, std::optional<std::string_view>
     // The folders get new session ids, and keep their UUIDs, so the recipes below can find them.
     document.userStyles = std::move(storedStyles);
 
-    for (const StoredFolder& stored : storedFolders) {
+    for (const StoredFolder& storedFolder : storedFolders) {
         Folder folder;
         folder.id = document.allocateId();
-        folder.uuid = stored.uuid;
-        folder.name = stored.name;
-        folder.trash = stored.trash;
+        folder.uuid = storedFolder.uuid;
+        folder.name = storedFolder.name;
+        folder.trash = storedFolder.trash;
         document.folders.push_back(std::move(folder));
     }
 

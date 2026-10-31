@@ -2,7 +2,7 @@
 
 #include <windows.h>
 #include <unknwn.h>
-#include <restrictederrors.h>
+#include <restrictederrorinfo.h>
 #include <shobjidl.h>
 #include <shobjidl_core.h>
 #include <shellapi.h>

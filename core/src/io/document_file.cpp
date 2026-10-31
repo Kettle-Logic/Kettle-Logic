@@ -61,7 +61,14 @@ std::optional<std::string> readWholeFile(const fs::path& path) {
 // Writes `text` to `path` and makes it durable before returning. On macOS
 // fsync does not force the drive's cache, so F_FULLFSYNC is used.
 void writeDurably(const fs::path& path, const std::string& text) {
+#if defined(_WIN32)
+    std::FILE* file = nullptr;
+    if (fopen_s(&file, path.string().c_str(), "wb") != 0) {
+        file = nullptr;
+    }
+#else
     std::FILE* file = std::fopen(path.string().c_str(), "wb");
+#endif
     if (file == nullptr) {
         throwSystem("cannot create", path);
     }
