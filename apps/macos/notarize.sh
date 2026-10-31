@@ -19,6 +19,11 @@ profile="${NOTARY_PROFILE:?Set NOTARY_PROFILE to the notarytool keychain profile
 
 case "$item" in
     *.app)
+        # An app that already carries a valid ticket (from an earlier run) needs nothing more, and stapling it again can fail.
+        if xcrun stapler validate "$item" > /dev/null 2>&1; then
+            echo "Already notarized and stapled: $item"
+            exit 0
+        fi
         # Apple takes a zip. The ticket is then stapled to the app itself, so the app keeps it after it is unzipped.
         work="$(mktemp -d)"
         trap 'rm -rf "$work"' EXIT
