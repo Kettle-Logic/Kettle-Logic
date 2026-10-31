@@ -99,7 +99,7 @@ Value number(const std::string& lexeme) {
     return Value::number(lexeme);
 }
 
-Value finite(double value) {
+Value finiteOrNull(double value) {
     if (!std::isfinite(value)) {
         return Value{};
     }
@@ -109,13 +109,13 @@ Value finite(double value) {
 }
 
 Value optionalFinite(const std::optional<double>& value) {
-    return value ? finite(*value) : Value{};
+    return value ? finiteOrNull(*value) : Value{};
 }
 
 Value rangeJson(const kettlelogic::calc::Range& range) {
     Object o;
-    o.push_back(Member{"low", finite(range.low)});
-    o.push_back(Member{"high", finite(range.high)});
+    o.push_back(Member{"low", finiteOrNull(range.low)});
+    o.push_back(Member{"high", finiteOrNull(range.high)});
     return Value::object(std::move(o));
 }
 
@@ -154,7 +154,7 @@ Value priceJson(const std::optional<kettlelogic::model::Price>& price) {
 Value costJson(const kettlelogic::calc::RecipeCost& cost) {
     Object o;
     o.push_back(Member{"currency", Value::string(cost.currency)});
-    o.push_back(Member{"total", finite(cost.total)});
+    o.push_back(Member{"total", finiteOrNull(cost.total)});
     o.push_back(Member{"perLiter", optionalFinite(cost.perLiter)});
     o.push_back(Member{"perGallon", optionalFinite(cost.perGallon)});
     o.push_back(Member{"unpriced", number(std::to_string(cost.unpriced))});
@@ -162,7 +162,7 @@ Value costJson(const kettlelogic::calc::RecipeCost& cost) {
     for (const auto& line : cost.byIngredient) {
         Object entry;
         entry.push_back(Member{"ingredient", Value::string(line.ingredient.toString())});
-        entry.push_back(Member{"cost", finite(line.cost)});
+        entry.push_back(Member{"cost", finiteOrNull(line.cost)});
         lines.push_back(Value::object(std::move(entry)));
     }
     o.push_back(Member{"byIngredient", Value::array(std::move(lines))});
@@ -943,8 +943,8 @@ char* kl_style_comparison_json(const kl_document* document, kl_recipe_id recipe,
                 Object o;
                 o.push_back(Member{"metric", Value::string(metricName(check.metric))});
                 o.push_back(Member{"value", optionalFinite(check.value)});
-                o.push_back(Member{"low", finite(check.range.low)});
-                o.push_back(Member{"high", finite(check.range.high)});
+                o.push_back(Member{"low", finiteOrNull(check.range.low)});
+                o.push_back(Member{"high", finiteOrNull(check.range.high)});
                 o.push_back(Member{"fit", Value::string(fitName(check.fit))});
                 checks.push_back(Value::object(std::move(o)));
             }
@@ -1012,22 +1012,22 @@ kettlelogic::calc::Ions ionsInput(const Value& object) {
 
 Value ionsJson(const kettlelogic::calc::Ions& ions) {
     Object o;
-    o.push_back(Member{"calcium", finite(ions.calcium)});
-    o.push_back(Member{"magnesium", finite(ions.magnesium)});
-    o.push_back(Member{"sodium", finite(ions.sodium)});
-    o.push_back(Member{"sulfate", finite(ions.sulfate)});
-    o.push_back(Member{"chloride", finite(ions.chloride)});
-    o.push_back(Member{"bicarbonate", finite(ions.bicarbonate)});
-    o.push_back(Member{"carbonate", finite(ions.carbonate)});
+    o.push_back(Member{"calcium", finiteOrNull(ions.calcium)});
+    o.push_back(Member{"magnesium", finiteOrNull(ions.magnesium)});
+    o.push_back(Member{"sodium", finiteOrNull(ions.sodium)});
+    o.push_back(Member{"sulfate", finiteOrNull(ions.sulfate)});
+    o.push_back(Member{"chloride", finiteOrNull(ions.chloride)});
+    o.push_back(Member{"bicarbonate", finiteOrNull(ions.bicarbonate)});
+    o.push_back(Member{"carbonate", finiteOrNull(ions.carbonate)});
     return Value::object(std::move(o));
 }
 
 Value analysisJson(const kettlelogic::calc::WaterAnalysis& a) {
     Object o;
     o.push_back(Member{"ions", ionsJson(a.ions)});
-    o.push_back(Member{"alkalinity", finite(a.alkalinity)});
-    o.push_back(Member{"effectiveHardness", finite(a.effectiveHardness)});
-    o.push_back(Member{"residualAlkalinity", finite(a.residualAlkalinity)});
+    o.push_back(Member{"alkalinity", finiteOrNull(a.alkalinity)});
+    o.push_back(Member{"effectiveHardness", finiteOrNull(a.effectiveHardness)});
+    o.push_back(Member{"residualAlkalinity", finiteOrNull(a.residualAlkalinity)});
     o.push_back(Member{"sulfateToChloride", optionalFinite(a.sulfateToChloride)});
     o.push_back(Member{"balance", Value::string(a.balance)});
     return Value::object(std::move(o));
@@ -1085,23 +1085,23 @@ char* kl_brewing_plan_json(const kl_document* document, kl_recipe_id recipe, con
 
             const auto plan = kettlelogic::calc::planBrewing(found, in);
             Object o;
-            o.push_back(Member{"grainKg", finite(plan.grainKg)});
-            o.push_back(Member{"strikeLiters", finite(plan.strikeLiters)});
-            o.push_back(Member{"absorptionLiters", finite(plan.absorptionLiters)});
-            o.push_back(Member{"firstRunningsLiters", finite(plan.firstRunningsLiters)});
+            o.push_back(Member{"grainKg", finiteOrNull(plan.grainKg)});
+            o.push_back(Member{"strikeLiters", finiteOrNull(plan.strikeLiters)});
+            o.push_back(Member{"absorptionLiters", finiteOrNull(plan.absorptionLiters)});
+            o.push_back(Member{"firstRunningsLiters", finiteOrNull(plan.firstRunningsLiters)});
             o.push_back(Member{"spargeLiters", optionalFinite(plan.spargeLiters)});
-            o.push_back(Member{"mashVolumeLiters", finite(plan.mashVolumeLiters)});
-            o.push_back(Member{"mashTunVolumeLiters", finite(plan.mashTunVolumeLiters)});
+            o.push_back(Member{"mashVolumeLiters", finiteOrNull(plan.mashVolumeLiters)});
+            o.push_back(Member{"mashTunVolumeLiters", finiteOrNull(plan.mashTunVolumeLiters)});
             o.push_back(Member{"strikeTempC", optionalFinite(plan.strikeTempC)});
             o.push_back(Member{"mashWater", analysisJson(plan.mashWater)});
             o.push_back(Member{"spargeWater", analysisJson(plan.spargeWater)});
-            o.push_back(Member{"acidMilliequivalents", finite(plan.acidMilliequivalents)});
-            o.push_back(Member{"alkalinityAfterAcid", finite(plan.alkalinityAfterAcid)});
+            o.push_back(Member{"acidMilliequivalents", finiteOrNull(plan.acidMilliequivalents)});
+            o.push_back(Member{"alkalinityAfterAcid", finiteOrNull(plan.alkalinityAfterAcid)});
             o.push_back(Member{"acidGramsForTarget", optionalFinite(plan.acidGramsForTarget)});
-            o.push_back(Member{"maltAcidityMilliequivalents", finite(plan.maltAcidityMilliequivalents)});
-            o.push_back(Member{"quartsPerPound", finite(plan.quartsPerPound)});
-            o.push_back(Member{"estimatedMashPhBeforeAcid", finite(plan.estimatedMashPhBeforeAcid)});
-            o.push_back(Member{"estimatedMashPh", finite(plan.estimatedMashPh)});
+            o.push_back(Member{"maltAcidityMilliequivalents", finiteOrNull(plan.maltAcidityMilliequivalents)});
+            o.push_back(Member{"quartsPerPound", finiteOrNull(plan.quartsPerPound)});
+            o.push_back(Member{"estimatedMashPhBeforeAcid", finiteOrNull(plan.estimatedMashPhBeforeAcid)});
+            o.push_back(Member{"estimatedMashPh", finiteOrNull(plan.estimatedMashPh)});
             o.push_back(Member{"spargeAcidGrams", optionalFinite(plan.spargeAcidGrams)});
             o.push_back(Member{"mashDifference", plan.mashDifference ? ionsJson(*plan.mashDifference) : Value{}});
             o.push_back(Member{"spargeAcidMilliliters", optionalFinite(plan.spargeAcidMilliliters)});
@@ -1242,28 +1242,28 @@ char* kl_starter_plan_json(const kl_document* document, kl_recipe_id recipe, int
                 found.batchSize.valueIn(Unit::Liter).toDouble(), *results.originalGravity, inputs);
 
             Object starter;
-            starter.push_back(Member{"liters", finite(plan.starterLiters)});
-            starter.push_back(Member{"gravity", finite(plan.starterGravity)});
-            starter.push_back(Member{"dryMaltOunces", finite(plan.dryMaltOunces)});
-            starter.push_back(Member{"dryMaltGrams", finite(plan.dryMaltGrams)});
-            starter.push_back(Member{"cellsWithStarterBillion", finite(plan.cellsWithStarterBillion)});
-            starter.push_back(Member{"addToBottlingLiters", finite(plan.addToBottlingLiters)});
+            starter.push_back(Member{"liters", finiteOrNull(plan.starterLiters)});
+            starter.push_back(Member{"gravity", finiteOrNull(plan.starterGravity)});
+            starter.push_back(Member{"dryMaltOunces", finiteOrNull(plan.dryMaltOunces)});
+            starter.push_back(Member{"dryMaltGrams", finiteOrNull(plan.dryMaltGrams)});
+            starter.push_back(Member{"cellsWithStarterBillion", finiteOrNull(plan.cellsWithStarterBillion)});
+            starter.push_back(Member{"addToBottlingLiters", finiteOrNull(plan.addToBottlingLiters)});
 
             Object twoStage;
-            twoStage.push_back(Member{"firstLiters", finite(plan.twoStageFirstLiters)});
-            twoStage.push_back(Member{"secondLiters", finite(plan.twoStageSecondLiters)});
+            twoStage.push_back(Member{"firstLiters", finiteOrNull(plan.twoStageFirstLiters)});
+            twoStage.push_back(Member{"secondLiters", finiteOrNull(plan.twoStageSecondLiters)});
             twoStage.push_back(Member{"use", Value::boolean(inputs.twoStage)});
 
             Object root;
-            root.push_back(Member{"targetGravity", finite(plan.targetGravity)});
-            root.push_back(Member{"targetPlato", finite(plan.targetPlato)});
-            root.push_back(Member{"batchLiters", finite(plan.batchLiters)});
-            root.push_back(Member{"pitchRate", finite(plan.pitchRate)});
-            root.push_back(Member{"cellsNeededBillion", finite(plan.cellsNeededBillion)});
+            root.push_back(Member{"targetGravity", finiteOrNull(plan.targetGravity)});
+            root.push_back(Member{"targetPlato", finiteOrNull(plan.targetPlato)});
+            root.push_back(Member{"batchLiters", finiteOrNull(plan.batchLiters)});
+            root.push_back(Member{"pitchRate", finiteOrNull(plan.pitchRate)});
+            root.push_back(Member{"cellsNeededBillion", finiteOrNull(plan.cellsNeededBillion)});
             root.push_back(Member{"packsWithoutStarter", number(std::to_string(plan.packsWithoutStarter))});
-            root.push_back(Member{"cellsWithoutStarterBillion", finite(plan.cellsWithoutStarterBillion)});
+            root.push_back(Member{"cellsWithoutStarterBillion", finiteOrNull(plan.cellsWithoutStarterBillion)});
             root.push_back(Member{"starter", Value::object(std::move(starter))});
-            root.push_back(Member{"oneStageLiters", finite(plan.oneStageLiters)});
+            root.push_back(Member{"oneStageLiters", finiteOrNull(plan.oneStageLiters)});
             root.push_back(Member{"twoStage", Value::object(std::move(twoStage))});
             root.push_back(Member{"notes", stringArray(plan.notes)});
             result = copyOut(kettlelogic::json::serialize(Value::object(std::move(root)), -1));
@@ -1517,7 +1517,7 @@ char* kl_tool_json(const char* tool, const char* inputs_json, char** error) {
             const auto output = kettlelogic::calc::tools::run(tool != nullptr ? tool : "", inputs);
             Object results;
             for (const auto& [name, value] : output.results) {
-                results.push_back(Member{name, finite(value)});
+                results.push_back(Member{name, finiteOrNull(value)});
             }
             Object root;
             root.push_back(Member{"results", Value::object(std::move(results))});
@@ -1657,7 +1657,7 @@ char* kl_brew_sheet_read_json(const kl_document* document, kl_recipe_id recipe, 
 
             Object numbers;
             for (const auto& [code, value] : values.numbers) {
-                numbers.push_back(Member{code, finite(value)});
+                numbers.push_back(Member{code, finiteOrNull(value)});
             }
             Object dates;
             for (const auto& [code, text] : values.dates) {
@@ -1704,11 +1704,11 @@ char* kl_brew_water_json(const char* inputs_json, char** error) {
             // The water as the report gives it. Its alkalinity in CaCO3.
             const double alkalinity = ions.bicarbonate * 50.0 / 61.0 + ions.carbonate * 50.0 / 30.0;
             Object report;
-            report.push_back(Member{"cationsMeq", finite(balance.cationsMeq)});
-            report.push_back(Member{"anionsMeq", finite(balance.anionsMeq)});
+            report.push_back(Member{"cationsMeq", finiteOrNull(balance.cationsMeq)});
+            report.push_back(Member{"anionsMeq", finiteOrNull(balance.anionsMeq)});
             report.push_back(Member{"balanced", Value::boolean(balance.balanced)});
-            report.push_back(Member{"alkalinity", finite(alkalinity)});
-            report.push_back(Member{"residualAlkalinity", finite(kettlelogic::calc::residualAlkalinity(ions))});
+            report.push_back(Member{"alkalinity", finiteOrNull(alkalinity)});
+            report.push_back(Member{"residualAlkalinity", finiteOrNull(kettlelogic::calc::residualAlkalinity(ions))});
             Object root;
             root.push_back(Member{"report", Value::object(std::move(report))});
 
@@ -1716,8 +1716,8 @@ char* kl_brew_water_json(const char* inputs_json, char** error) {
                 const brew_water::Speciation species = brew_water::speciesFromAlkalinity(
                     numberInput(*conversion, "alkalinity", 0), numberInput(*conversion, "pH", 7));
                 Object o;
-                o.push_back(Member{"bicarbonate", finite(species.bicarbonate)});
-                o.push_back(Member{"carbonate", finite(species.carbonate)});
+                o.push_back(Member{"bicarbonate", finiteOrNull(species.bicarbonate)});
+                o.push_back(Member{"carbonate", finiteOrNull(species.carbonate)});
                 root.push_back(Member{"conversion", Value::object(std::move(o))});
             }
 
@@ -1767,22 +1767,22 @@ char* kl_brew_water_json(const char* inputs_json, char** error) {
 
                 // The acid that brings the mash to the target pH, if the user names one.
                 Object mashOut;
-                mashOut.push_back(Member{"maltAcidityMeq", finite(acidity)});
-                mashOut.push_back(Member{"quartsPerPound", finite(quartsPerPound)});
-                mashOut.push_back(Member{"residualAlkalinityBefore", finite(raBefore)});
-                mashOut.push_back(Member{"phBefore", finite(brew_water::mashPh(acidity, raBefore, quartsPerPound, liters))});
-                mashOut.push_back(Member{"residualAlkalinityAfter", finite(raAfter)});
-                mashOut.push_back(Member{"phAfter", finite(brew_water::mashPh(acidity, raAfter, quartsPerPound, liters))});
-                mashOut.push_back(Member{"targetPh", finite(targetPh)});
+                mashOut.push_back(Member{"maltAcidityMeq", finiteOrNull(acidity)});
+                mashOut.push_back(Member{"quartsPerPound", finiteOrNull(quartsPerPound)});
+                mashOut.push_back(Member{"residualAlkalinityBefore", finiteOrNull(raBefore)});
+                mashOut.push_back(Member{"phBefore", finiteOrNull(brew_water::mashPh(acidity, raBefore, quartsPerPound, liters))});
+                mashOut.push_back(Member{"residualAlkalinityAfter", finiteOrNull(raAfter)});
+                mashOut.push_back(Member{"phAfter", finiteOrNull(brew_water::mashPh(acidity, raAfter, quartsPerPound, liters))});
+                mashOut.push_back(Member{"targetPh", finiteOrNull(targetPh)});
                 const double raTarget = brew_water::residualAlkalinityForMashPh(targetPh, acidity, quartsPerPound, liters);
-                mashOut.push_back(Member{"residualAlkalinityForTarget", finite(raTarget)});
+                mashOut.push_back(Member{"residualAlkalinityForTarget", finiteOrNull(raTarget)});
                 if (const Value* target = mash->find("targetAcid"); target != nullptr && target->isObject()) {
                     const std::string kind = stringInput(*target, "kind", "");
                     const brew_water::Acid* acid = brew_water::findAcid(kind);
                     if (acid == nullptr) throw std::invalid_argument("\"" + kind + "\" is not an acid");
                     const double toRemove = std::max(0.0, raBefore - raTarget);
                     const double strength = numberInput(*target, "strength", 100);
-                    mashOut.push_back(Member{"acidGramsForTarget", finite(brew_water::acidGramsToRemoveAlkalinity(
+                    mashOut.push_back(Member{"acidGramsForTarget", finiteOrNull(brew_water::acidGramsToRemoveAlkalinity(
                                                                       *acid, toRemove, strength, liters, targetPh))});
                 }
                 root.push_back(Member{"mash", Value::object(std::move(mashOut))});
@@ -1796,9 +1796,9 @@ char* kl_brew_water_json(const char* inputs_json, char** error) {
                     alkalinity, numberInput(*sparge, "startPh", 7), numberInput(*sparge, "targetPh", 5.6),
                     numberInput(*sparge, "liters", 0), *acid, numberInput(*sparge, "strength", 85));
                 Object o;
-                o.push_back(Member{"alkalinity", finite(alkalinity)});
-                o.push_back(Member{"acidMmolPerLiter", finite(s.acidMmolPerLiter)});
-                o.push_back(Member{"pureGrams", finite(s.pureGrams)});
+                o.push_back(Member{"alkalinity", finiteOrNull(alkalinity)});
+                o.push_back(Member{"acidMmolPerLiter", finiteOrNull(s.acidMmolPerLiter)});
+                o.push_back(Member{"pureGrams", finiteOrNull(s.pureGrams)});
                 o.push_back(Member{"solutionGrams", optionalFinite(s.solutionGrams)});
                 o.push_back(Member{"milliliters", optionalFinite(s.milliliters)});
                 root.push_back(Member{"sparge", Value::object(std::move(o))});
