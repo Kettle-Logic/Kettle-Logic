@@ -56,6 +56,8 @@ Then build the app you touched, using the steps in the README:
 - Linux: `cmake -S apps/linux -B build/linux`, then `cmake --build build/linux`. Run the smoke test as described in
   [apps/linux/README.md](apps/linux/README.md) when you change a screen.
 - Windows: `apps\windows\build.ps1` from a Developer PowerShell. Use `-SkipTests` only if you have already run the tests.
+  Run `apps\windows\tests\smoke.ps1` as described in [apps/windows/README.md](apps/windows/README.md#smoke-test)
+  when you change a screen.
 
 Some steps need extra care:
 

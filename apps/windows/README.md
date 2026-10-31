@@ -55,9 +55,14 @@ offer the same ingredients, systems, styles, and tools.
 
 Requirements:
 
-- Visual Studio 2022 17.8 or newer, with "Desktop development with C++" and "Windows application development".
-- CMake 3.25 or newer and NuGet on the path (Developer PowerShell has both with Visual Studio).
-- Boost 1.80 or newer, headers only: `vcpkg install boost-headers`, then pass `-BoostRoot` the folder that holds `boost\`.
+- Visual Studio 2022 17.8 or newer, or Visual Studio 2026, with "Desktop development with C++" and "Windows application
+  development". `build.ps1` uses the newest of the two that CMake has a generator for.
+- CMake 3.25 or newer on the path (Developer PowerShell has it with Visual Studio), and `nuget.exe` on the path
+  ([nuget.org/downloads](https://www.nuget.org/downloads)).
+- Boost 1.80 or newer, headers only: unzip the `boost\` folder from the release archive at boost.io (for example to
+  `C:\boost`), or install `boost-headers` with vcpkg. Pass `-BoostRoot` the folder that holds `boost\`, or set `BOOST_ROOT`.
+  To build from the Visual Studio IDE, which does not see a `BOOST_ROOT` set in a shell, create
+  `KettleLogic\KettleLogic.Local.props` (it is not in git) that sets `<BoostRoot>C:\boost</BoostRoot>`.
 
 Then, from a Developer PowerShell:
 
@@ -79,6 +84,24 @@ cmake --build build/windows-logic
 ctest --test-dir build/windows-logic --output-on-failure
 ```
 
+## Smoke test
+
+`tests\smoke.ps1` is the Windows counterpart of the Linux smoke test. It starts the built app on an empty set of files
+(it sets `KETTLELOGIC_HOME`, so your settings and recipes are left alone), then drives every screen through UI
+Automation, as an assistive tool would: the first-launch choice, the new-recipe wizard, every tab of a recipe in full
+mode, simple mode, and with flat tabs, the ingredient editors, the procedure and brew-day window, every calculator and
+converter, the help window, the settings, the style editor, the ingredient directory, and undo, duplicate, and delete.
+It reports a crash, a hang, a missing control, or a window that did not open, and ends with
+`N screens visited, M problems`. It needs a desktop session and takes a couple of minutes.
+
+```powershell
+.\apps\windows\tests\smoke.ps1                          # the Debug build that build.ps1 makes
+.\apps\windows\tests\smoke.ps1 -Shots $env:TEMP\shots    # the folder is optional: it saves a PNG per screen
+```
+
+Set `KETTLELOGIC_SMOKE_DEBUG=1` to list what was on screen at each problem. Do not use the mouse while it runs, because it
+falls back to a click for a control that cannot be pressed any other way.
+
 ## Packaging
 
 `make-installer.ps1` builds the app with `build.ps1` (unless `-SkipBuild` is given), then compiles
@@ -93,10 +116,12 @@ ctest --test-dir build/windows-logic --output-on-failure
   Unit Tools menus runs with its defaults and returns every result its form shows; planning JSON written by the Mac app
   reads back, and the app's own JSON reads back; autosave renames a file with its recipe; undo covers a recipe built from
   a style in one step. The library compiles clean with `-Wall -Wextra -Wpedantic -Werror`.
-- **Not checked:** everything under `KettleLogic/`. It has not been through a C++/WinRT compiler, the XAML compiler, or
-  MSBuild, and it has never run. Expect compile errors on the first build, mostly in C++/WinRT projection details. The
-  NuGet package versions in `packages.config` were chosen from memory and may need bumping. After it builds, walk
-  through every screen against the macOS app.
+- **Built and run on Windows:** `KettleLogic/` builds with Visual Studio 2026 (MSVC 14.51, Windows SDK 10.0.26100, Windows
+  App SDK 1.6) in Debug, and `tests\smoke.ps1` walks every screen with no crash and no missing control. The engine and the
+  app logic pass their tests under MSVC with `/W4 /WX`.
+- **Not checked:** the Release configuration, ARM64, Visual Studio 2022, the installer, and the screens' details against
+  the macOS app. The smoke test shows that every screen opens and takes input, not that every number and label is right.
+  Compare each screen with the macOS app.
 
 ## How it differs from the macOS app
 

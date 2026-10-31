@@ -174,7 +174,15 @@ private:
         root_.Children().Append(tabBar_);
         root_.Children().Append(strip_);
         root_.Children().Append(content_);
-        content_.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+        // A ContentControl aligns its content to the left unless told to stretch it. The results strip spans the window.
+        for (const ctl::ContentControl& control : {groupBar_, tabBar_, strip_, content_}) {
+            control.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+        }
+        // A thin line under each bar, as the macOS screen has between the tabs, the results strip, and the form.
+        for (const ctl::ContentControl& bar : {groupBar_, tabBar_, strip_}) {
+            bar.BorderThickness(xaml::Thickness{0, 0, 0, 1});
+            bar.BorderBrush(ui::ThemeBrush(L"DividerStrokeColorDefaultBrush"));
+        }
         content_.VerticalContentAlignment(xaml::VerticalAlignment::Stretch);
     }
 

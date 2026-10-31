@@ -47,12 +47,32 @@ fs::path KnownFolder(REFKNOWNFOLDERID id) {
 
 }  // namespace
 
+namespace {
+
+// The smoke test (tests\smoke.ps1) sets KETTLELOGIC_HOME so it runs on an empty set of files and leaves the user's alone.
+fs::path HomeOverride() {
+    wchar_t buffer[MAX_PATH * 2] = {};
+    const DWORD length = ::GetEnvironmentVariableW(L"KETTLELOGIC_HOME", buffer, static_cast<DWORD>(std::size(buffer)));
+    if (length == 0 || length >= std::size(buffer)) {
+        return {};
+    }
+    return fs::path(std::wstring(buffer, length));
+}
+
+}  // namespace
+
 fs::path HomeFolder() {
+    if (const fs::path override = HomeOverride(); !override.empty()) {
+        return override;
+    }
     const fs::path home = KnownFolder(FOLDERID_Profile);
     return home.empty() ? fs::temp_directory_path() : home;
 }
 
 fs::path DataFolder() {
+    if (const fs::path override = HomeOverride(); !override.empty()) {
+        return override / L"data";
+    }
     const fs::path local = KnownFolder(FOLDERID_LocalAppData);
     return (local.empty() ? fs::temp_directory_path() : local) / L"KettleLogic";
 }

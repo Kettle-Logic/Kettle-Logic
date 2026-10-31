@@ -4,6 +4,7 @@
 
 #include "kettlelogic/app/planning.hpp"
 
+#include <algorithm>
 #include <deque>
 
 namespace kl::ui {
@@ -109,6 +110,8 @@ ctl::Button IconButton(ctl::Symbol symbol, std::string_view tip, std::function<v
     button.Background(ColorBrush(winrt::Microsoft::UI::Colors::Transparent()));
     button.BorderThickness(Thickness{0, 0, 0, 0});
     SetTip(button, tip);
+    // An icon has no text, so the tip is also what a screen reader says.
+    xaml::Automation::AutomationProperties::SetName(button, H(tip));
     button.Click([onClick = std::move(onClick)](auto const&, auto const&) {
         if (onClick) onClick();
     });
@@ -247,7 +250,15 @@ ctl::StackPanel HStack(std::initializer_list<xaml::UIElement> items, double spac
     ctl::StackPanel panel;
     panel.Orientation(ctl::Orientation::Horizontal);
     panel.Spacing(spacing);
-    for (const auto& item : items) panel.Children().Append(item);
+    for (const auto& item : items) {
+        // A label next to a field lines up with the field's middle, not its top. Items that set their own alignment keep it.
+        if (const auto element = item.try_as<xaml::FrameworkElement>()) {
+            if (element.VerticalAlignment() == xaml::VerticalAlignment::Stretch) {
+                element.VerticalAlignment(xaml::VerticalAlignment::Center);
+            }
+        }
+        panel.Children().Append(item);
+    }
     return panel;
 }
 
@@ -346,6 +357,7 @@ void Form::SectionWithAction(std::string_view header, std::string_view actionLab
     add.Background(ColorBrush(winrt::Microsoft::UI::Colors::Transparent()));
     add.BorderThickness(Thickness{0, 0, 0, 0});
     SetTip(add, std::string(actionLabel) + " " + std::string(header));
+    xaml::Automation::AutomationProperties::SetName(add, H(actionLabel));
     add.Click([action = std::move(action)](auto const&, auto const&) {
         if (action) action();
     });
@@ -372,7 +384,34 @@ void Form::AddRow(xaml::UIElement const& row) {
     rows_.Children().Append(cell);
 }
 
+namespace {
+
+// A switch, text box, or list has no text of its own, so a screen reader would announce it without a name. The label
+// beside it names it, which also lets the smoke test find it. A row's control can be a stack that holds the field and
+// a unit, so the first such control inside is named.
+void NameFromLabel(xaml::DependencyObject const& control, winrt::hstring const& label) {
+    if (control.try_as<ctl::TextBox>() || control.try_as<ctl::ComboBox>() || control.try_as<ctl::ToggleSwitch>() ||
+        control.try_as<ctl::Slider>()) {
+        if (xaml::Automation::AutomationProperties::GetName(control).empty()) {
+            xaml::Automation::AutomationProperties::SetName(control, label);
+        }
+        return;
+    }
+    if (const auto panel = control.try_as<ctl::Panel>()) {
+        for (const auto& child : panel.Children()) {
+            if (child.try_as<ctl::TextBox>() || child.try_as<ctl::ComboBox>() || child.try_as<ctl::ToggleSwitch>() ||
+                child.try_as<ctl::Slider>()) {
+                NameFromLabel(child, label);
+                return;
+            }
+        }
+    }
+}
+
+}  // namespace
+
 void Form::Labeled(std::string_view label, xaml::UIElement const& control, std::string_view help) {
+    NameFromLabel(control, H(label));
     xaml::UIElement left = help.empty() ? xaml::UIElement(Text(label)) : xaml::UIElement(VStack({Text(label), Text(help, Kind::caption)}, 2));
     Labeled(left, control);
 }
@@ -416,6 +455,12 @@ xaml::UIElement Form::Build() {
     ctl::ScrollViewer scroller;
     scroller.VerticalScrollBarVisibility(ctl::ScrollBarVisibility::Auto);
     scroller.HorizontalScrollBarVisibility(ctl::ScrollBarVisibility::Disabled);
+    // The page is a column centered in the window, as wide as the window up to 840, so the margin is the same on each
+    // side. A stretched panel with a maximum width does not center reliably inside a ScrollViewer, so the width is set.
+    page_.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+    scroller.SizeChanged([page = page_](auto const&, xaml::SizeChangedEventArgs const& args) {
+        page.Width((std::min)(840.0, static_cast<double>(args.NewSize().Width)));
+    });
     scroller.Content(page_);
     return scroller;
 }

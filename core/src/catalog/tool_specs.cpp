@@ -15,20 +15,20 @@ std::vector<std::string> withNone(std::vector<std::string> list) {
 }
 
 ToolField number(const char* key, const char* label, const char* value) {
-    return ToolField{.key = key, .label = label, .kind = ToolField::Kind::number, .defaultValue = value};
+    return ToolField{.key = key, .label = label, .kind = ToolField::Kind::number, .defaultValue = value, .choices = {}, .enabledBy = {}};
 }
 
 ToolField toggle(const char* key, const char* label, bool on) {
-    return ToolField{.key = key, .label = label, .kind = ToolField::Kind::toggle, .defaultValue = on ? "1" : "0"};
+    return ToolField{.key = key, .label = label, .kind = ToolField::Kind::toggle, .defaultValue = on ? "1" : "0", .choices = {}, .enabledBy = {}};
 }
 
 ToolReadout readout(const char* key, const char* label, const char* unit = "") {
-    return ToolReadout{.key = key, .label = label, .unit = unit};
+    return ToolReadout{.key = key, .label = label, .unit = unit, .enabledBy = {}};
 }
 
 // A choice of one value from a list, shown by its label.
 ToolField choice(const char* key, const char* label, const std::vector<std::string>& options, const char* value) {
-    ToolField field{.key = key, .label = label, .kind = ToolField::Kind::choice, .defaultValue = value};
+    ToolField field{.key = key, .label = label, .kind = ToolField::Kind::choice, .defaultValue = value, .choices = {}, .enabledBy = {}};
     for (const std::string& option : options) {
         field.choices.push_back(Choice{option, option});
     }
@@ -42,9 +42,9 @@ ToolSpec converter(const char* title, const char* tool, const std::vector<std::p
     for (const auto& [value, label] : units) {
         choices.push_back(Choice{value, label});
     }
-    ToolField from{.key = "from", .label = "From", .kind = ToolField::Kind::choice, .defaultValue = defaults.first};
+    ToolField from{.key = "from", .label = "From", .kind = ToolField::Kind::choice, .defaultValue = defaults.first, .choices = {}, .enabledBy = {}};
     from.choices = choices;
-    ToolField to{.key = "to", .label = "To", .kind = ToolField::Kind::choice, .defaultValue = defaults.second};
+    ToolField to{.key = "to", .label = "To", .kind = ToolField::Kind::choice, .defaultValue = defaults.second, .choices = {}, .enabledBy = {}};
     to.choices = choices;
     return ToolSpec{.title = title,
                     .sections = {ToolSection{.title = "Convert",
