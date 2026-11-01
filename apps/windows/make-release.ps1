@@ -16,6 +16,8 @@ param(
     [ValidateSet('x64', 'ARM64')] [string] $Platform = 'x64',
     # Signs the installer. Use the certificate the app is signed with. See make-installer.ps1.
     [string] $SignCommand,
+    # Signs with a self-signed certificate instead. See make-installer.ps1.
+    [switch] $SelfSign,
     # Reuses the last build instead of building the app again.
     [switch] $SkipBuild,
     # Uploads the installer and the update list. Without it, the files are only built.
@@ -33,6 +35,7 @@ $root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $installerArgs = @{ Configuration = 'Release'; Platform = $Platform }
 if ($SkipBuild) { $installerArgs.SkipBuild = $true }
 if ($SignCommand) { $installerArgs.SignCommand = $SignCommand }
+if ($SelfSign) { $installerArgs.SelfSign = $true }
 if ($Iscc) { $installerArgs.Iscc = $Iscc }
 if ($BoostRoot) { $installerArgs.BoostRoot = $BoostRoot }
 & (Join-Path $PSScriptRoot 'make-installer.ps1') @installerArgs
@@ -42,8 +45,8 @@ $version = $props.Project.PropertyGroup | ForEach-Object { $_.KettleLogicUiVersi
 $arch = $Platform.ToLowerInvariant()
 $installer = Join-Path $root "dist\KettleLogic-Setup-$version-$arch.exe"
 if (-not (Test-Path $installer)) { throw "The installer was not built: $installer" }
-if ($Publish -and -not $SignCommand) {
-    throw 'Publishing needs a signed installer, because the in-app update installs only an installer signed by the same certificate as the app. Pass -SignCommand.'
+if ($Publish -and -not $SignCommand -and -not $SelfSign) {
+    throw 'Publishing needs a signed installer, because the in-app update installs only an installer signed by the same certificate as the app. Pass -SignCommand or -SelfSign.'
 }
 
 # 2. The update list. Start from the published one so the other platforms' entries stay.

@@ -54,6 +54,9 @@ You need macOS 26.
 2. Run it and follow the prompts. Run it as an administrator to install for everyone, or as yourself to install just for you.
 3. Open Kettle Logic from the Start menu.
 
+Free code signing for the Windows build is provided by [SignPath.io](https://signpath.io), with a certificate from the
+[SignPath Foundation](https://signpath.org).
+
 ### Linux
 
 1. Install [Flatpak](https://flatpak.org/setup/) if you don't have it.

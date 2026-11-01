@@ -67,7 +67,10 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 
 [Files]
 ; The program, its Windows App SDK runtime (the app is self-contained), and the Help folder beside it.
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "{#AppExe}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; The program is signed too, because the in-app update runs an installer only when its certificate matches the running
+; program's. Without a sign command the sign flag does nothing.
+Source: "{#SourceDir}\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion sign
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"

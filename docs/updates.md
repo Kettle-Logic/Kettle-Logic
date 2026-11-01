@@ -244,6 +244,31 @@ One script builds the app, runs the tests, builds and signs the installer, write
    already created it), fetches the published `updates.json`, adds the `windows` entry with the installer's SHA-256, and
    replaces `updates.json` in the `updates` release. It refuses to publish an unsigned installer.
 
+**No certificate? Self-sign with `-SelfSign`.** Use it in place of `-SignCommand`:
+
+```powershell
+.\apps\windows\make-release.ps1 -SelfSign
+```
+
+The script makes a certificate named `CN=Kettle Logic (self-signed)` in your user certificate store, reuses it on later
+builds, signs the program, the installer, and the uninstaller with it, and writes its public part to
+`dist\KettleLogic-SelfSigned.cer`. `-SelfSign` also lets `-Publish` go ahead.
+
+Keep in mind what self-signing can and can't do:
+
+- Windows doesn't trust the certificate, so SmartScreen still warns when people run the installer.
+- The in-app update accepts a signature only if Windows reports it valid. On each computer that should update in-app,
+  trust the certificate first, from an administrator PowerShell:
+
+  ```powershell
+  Import-Certificate -FilePath .\dist\KettleLogic-SelfSigned.cer -CertStoreLocation Cert:\LocalMachine\Root
+  ```
+
+  A computer that hasn't done this has to update by hand.
+- Every release must use the same certificate, and so the same computer or an exported copy of its private key. If you
+  lose it, installed copies can't update in-app to a build signed with a new one.
+- Anyone who trusts the `.cer` file trusts whatever it signs. Share it only with people who should install your builds.
+
 Other options: `-Platform ARM64` for an ARM64 installer, `-SkipBuild` to package the last build again, and `-Repo` to publish
 somewhere other than `Kettle-Logic/Kettle-Logic`.
 
@@ -368,8 +393,8 @@ CMake remembers the Boost it found, and run the script again.
 
 **Windows: "SignTool Error: Invalid option".** The `-SignCommand` text reached `signtool` with a typo in it (for example,
 `/fd/ SHA256` instead of `/fd SHA256`). Copy the command exactly as written under [Publish for Windows](#publish-for-windows),
-in single quotes, and keep `$f`. If you have no certificate yet, leave `-SignCommand` off to build an unsigned installer for
-testing. That installer can't be published.
+in single quotes, and keep `$f`. If you have no certificate yet, use `-SelfSign`, or leave `-SignCommand` off to build an
+unsigned installer for testing. An unsigned installer can't be published.
 
 **Windows: the update never starts, or the check fails with a signature error.** The installer must be validly signed by
 the same certificate as the running app. A development build is unsigned, so it never runs an update. Update it by hand.

@@ -10,10 +10,17 @@
   With -SignCommand, the installer and its uninstaller are signed. Give the command with $f where the file goes, for
   example:
     -SignCommand 'signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a $f'
-  The certificate must be the one the app is signed with, because the in-app update checks that they match.
+  The certificate must be the one the app is signed with, because the in-app update checks that they match. The program
+  (KettleLogic.exe), the installer, and the uninstaller are all signed with it.
+
+  With -SelfSign, there is no certificate to buy. The script makes a self-signed code-signing certificate in your user
+  certificate store (or reuses the one it made before), signs with it, and writes its public part to
+  dist\KettleLogic-SelfSigned.cer. Windows does not trust a self-signed certificate, so SmartScreen still warns, and the
+  in-app update works only on a computer that has trusted the .cer file. See docs\updates.md.
 
 .EXAMPLE
   .\apps\windows\make-installer.ps1 -Configuration Release -Platform x64 -SignCommand '...'
+  .\apps\windows\make-installer.ps1 -Configuration Release -Platform x64 -SelfSign
 #>
 param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Release',
@@ -22,6 +29,8 @@ param(
     [switch] $SkipBuild,
     # Signs the installer. See the description above.
     [string] $SignCommand,
+    # Signs with a self-signed certificate made on this computer. Not for use with -SignCommand.
+    [switch] $SelfSign,
     # Where ISCC.exe is, if it is not in Program Files.
     [string] $Iscc,
     # The folder that holds the boost folder. Not needed when BOOST_ROOT is set.
@@ -64,6 +73,24 @@ $arch = $Platform.ToLowerInvariant()
 $dist = Join-Path $root 'dist'
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
+if ($SelfSign) {
+    if ($SignCommand) { throw 'Pass either -SelfSign or -SignCommand, not both.' }
+    # Reuse the certificate from an earlier build, because the in-app update needs every release signed by the same one.
+    $subject = 'CN=Kettle Logic (self-signed)'
+    $cert = Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert |
+        Where-Object { $_.Subject -eq $subject -and $_.NotAfter -gt (Get-Date).AddDays(30) } |
+        Sort-Object NotAfter -Descending | Select-Object -First 1
+    if (-not $cert) {
+        Write-Host "Making a self-signed code-signing certificate: $subject"
+        $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject $subject -CertStoreLocation Cert:\CurrentUser\My `
+            -KeyAlgorithm RSA -KeyLength 3072 -HashAlgorithm SHA256 -NotAfter (Get-Date).AddYears(5)
+    }
+    $cerFile = Join-Path $dist 'KettleLogic-SelfSigned.cer'
+    Export-Certificate -Cert $cert -FilePath $cerFile -Force | Out-Null
+    $SignCommand = "signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /sha1 $($cert.Thumbprint) `$f"
+    Write-Host "Signing with the self-signed certificate $($cert.Thumbprint). Its public part is $cerFile."
+}
+
 $arguments = @(
     "/DAppVersion=$version",
     "/DArch=$arch",
@@ -82,4 +109,10 @@ if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE." }
 $installer = Join-Path $dist "KettleLogic-Setup-$version-$arch.exe"
 Write-Host "Built: $installer"
 Write-Host ''
+if ($SelfSign) {
+    Write-Host 'The certificate is self-signed, so Windows trusts it only where you add it. On each computer that should accept'
+    Write-Host 'the installer and in-app updates, run this in an administrator PowerShell:'
+    Write-Host "  Import-Certificate -FilePath '$cerFile' -CertStoreLocation Cert:\LocalMachine\Root"
+    Write-Host ''
+}
 Write-Host 'To publish it, run make-release.ps1 -Publish. See docs\updates.md.'
