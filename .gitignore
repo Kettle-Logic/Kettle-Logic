@@ -114,3 +114,4 @@ desktop.ini
 
 # Per-machine Visual Studio settings, such as BoostRoot (see apps/windows/KettleLogic/KettleLogic.Paths.props)
 *.Local.props
+project.pbxproj
