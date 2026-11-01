@@ -75,8 +75,10 @@ struct InterfaceChoiceSheet: View {
                     }
                 }
             }
-            note("hand.raised", "You can change this any time in **Settings** under **Privacy**. Nothing about your "
-                + "recipes is ever sent.")
+            note("hand.raised", """
+                You can change this any time in **Settings** under **Privacy**. Nothing about your \
+                recipes is ever sent.
+                """)
         }
     }
 
@@ -109,8 +111,10 @@ struct InterfaceChoiceSheet: View {
                     detail: "Every setting: mash steps, water chemistry, yeast starters, boil-off, "
                         + "and detailed ingredient fields.") { selection = false }
             }
-            note("gearshape", "You can change this any time in **Settings** (Kettle Logic ▸ Settings, or ⌘,) under "
-                + "**Interface**, or from **View ▸ Simple Mode**.")
+            note("gearshape", """
+                You can change this any time in **Settings** (Kettle Logic ▸ Settings, or ⌘,) under \
+                **Interface**, or from **View ▸ Simple Mode**.
+                """)
         }
     }
 
