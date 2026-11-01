@@ -46,6 +46,7 @@ CloseApplications=yes
 RestartApplications=yes
 UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\{#AppExe}
+SetupIconFile=..\KettleLogic\KettleLogic.ico
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
