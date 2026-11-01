@@ -103,6 +103,24 @@ publish adds that platform's entry to `updates.json` and keeps the others.
    On Windows, skip this step. `make-release.ps1` builds the engine and runs its tests as part of the build. To run just
    the engine tests, see [Testing an update list locally](#testing-an-update-list-locally).
 
+4. Decide whether the release reports anonymous usage. A build reports to Google Analytics only when it is given a
+   measurement ID and an API secret, and sends nothing otherwise. See [Privacy](privacy.md) for what is reported. The
+   release scripts don't set these for you, so a release built without them has no telemetry.
+
+   - **Measurement ID:** `G-5J1VSWCP8V`. It is not secret.
+   - **API secret:** keep it out of the repository, and read it from your shell or your CI secrets. To make one, open
+     [analytics.google.com](https://analytics.google.com) and go to Admin > Data collection and modification > Data
+     streams > the web stream > Measurement Protocol API secrets > Create.
+
+   | App | How to give the release its ids |
+   |---|---|
+   | macOS | Set `KL_GA_MEASUREMENT_ID` and `KL_GA_API_SECRET` in the environment of the build. The Xcode project reads them as build settings, and `make-app.sh` reads them too. |
+   | Windows | Configure the logic build once with `cmake -S apps/windows -B build/windows-logic -DKETTLELOGIC_GA_MEASUREMENT_ID=G-5J1VSWCP8V -DKETTLELOGIC_GA_API_SECRET=<secret>`. CMake keeps the values in its cache, so `make-release.ps1` picks them up on later runs. |
+   | Linux | Add the same two `-D` options to the `cmake -S apps/linux ...` line in `apps/linux/flatpak/org.kettlelogic.KettleLogic.yml`, and don't commit the secret. |
+
+   To check the setup before you ship, add `-DKETTLELOGIC_GA_DEBUG=ON` (macOS: `KL_GA_DEBUG=YES`). Reports are then
+   validated by Google and not recorded. Remove it for the real release.
+
 Versions are `major.minor.patch` numbers. Pre-release tags are not supported.
 
 ### First time only: the `updates` release
