@@ -21,7 +21,9 @@ param(
     # Uploads the installer and the update list. Without it, the files are only built.
     [switch] $Publish,
     [string] $Repo = 'Kettle-Logic/Kettle-Logic',
-    [string] $Iscc
+    [string] $Iscc,
+    # The folder that holds the boost folder. Not needed when BOOST_ROOT is set.
+    [string] $BoostRoot = $env:BOOST_ROOT
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,6 +34,7 @@ $installerArgs = @{ Configuration = 'Release'; Platform = $Platform }
 if ($SkipBuild) { $installerArgs.SkipBuild = $true }
 if ($SignCommand) { $installerArgs.SignCommand = $SignCommand }
 if ($Iscc) { $installerArgs.Iscc = $Iscc }
+if ($BoostRoot) { $installerArgs.BoostRoot = $BoostRoot }
 & (Join-Path $PSScriptRoot 'make-installer.ps1') @installerArgs
 
 $props = [xml](Get-Content (Join-Path $PSScriptRoot 'KettleLogic\KettleLogic.Paths.props') -Raw)

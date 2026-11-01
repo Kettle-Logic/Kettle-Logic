@@ -23,7 +23,9 @@ param(
     # Signs the installer. See the description above.
     [string] $SignCommand,
     # Where ISCC.exe is, if it is not in Program Files.
-    [string] $Iscc
+    [string] $Iscc,
+    # The folder that holds the boost folder. Not needed when BOOST_ROOT is set.
+    [string] $BoostRoot = $env:BOOST_ROOT
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,7 +34,7 @@ $root = Resolve-Path (Join-Path $here '..\..')
 
 # 1. The app. build.ps1 builds the engine, the logic, its tests, and the WinUI app.
 if (-not $SkipBuild) {
-    & (Join-Path $here 'build.ps1') -Configuration $Configuration -Platform $Platform
+    & (Join-Path $here 'build.ps1') -Configuration $Configuration -Platform $Platform -BoostRoot $BoostRoot
 }
 
 $source = Join-Path $root "build\windows-app\$Platform\$Configuration"

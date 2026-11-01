@@ -21,6 +21,12 @@ $build = Join-Path $root 'build\windows-logic'
 
 if ($BoostRoot) { $env:BOOST_ROOT = $BoostRoot }
 
+# Without a Boost folder, CMake searches for one and can find MSYS2's MinGW Boost, whose headers break the MSVC build with
+# hundreds of syntax errors. Stop here with the fix instead.
+if (-not $env:BOOST_ROOT -or -not (Test-Path (Join-Path $env:BOOST_ROOT 'boost\version.hpp'))) {
+    throw 'Boost was not found. Pass -BoostRoot (or set BOOST_ROOT) to the folder that holds the boost folder, for example C:\vcpkg\installed\x64-windows\include.'
+}
+
 # A failing native command does not stop a script by itself, so each one is checked.
 function Invoke-Step([string] $Name, [scriptblock] $Command) {
     & $Command

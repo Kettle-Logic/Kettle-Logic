@@ -211,7 +211,15 @@ so use it for testing only.
 
 Do all of this from a Developer PowerShell for Visual Studio 2026, on Windows, in the repository root. You need Visual
 Studio 2026 with the C++ and WinUI workloads, [Inno Setup 7](https://jrsoftware.org/isinfo.php), Python 3, the `gh` tool
-signed in, and a code-signing certificate. `signtool` comes with the Windows SDK, which Visual Studio installs.
+signed in, and a code-signing certificate. `signtool` comes with the Windows SDK, which Visual Studio installs. You also
+need the Boost headers (`vcpkg install boost-headers`), and you must tell the build where they are. Do this once per
+PowerShell window, or use `-BoostRoot` with the script below:
+
+```powershell
+$env:BOOST_ROOT = "C:\vcpkg\installed\x64-windows\include"
+```
+
+Don't point it at MSYS2's Boost (`C:\msys64\...`). Those are MinGW headers, and they break the Visual Studio build.
 
 One script builds the app, runs the tests, builds and signs the installer, writes the update list, and publishes:
 
@@ -352,6 +360,11 @@ Install the newest app to get a matching engine.
 
 **macOS: an older app runs a newer engine.** This is intended. Installed engines are kept after you replace the app, and
 the loader uses the newest one that works. It's safe when the interface numbers match.
+
+**Windows: hundreds of syntax errors, with paths under `C:\msys64\mingw64\include`.** CMake found MSYS2's MinGW Boost
+instead of yours, and its headers don't work with Visual Studio. Set `BOOST_ROOT` (or pass `-BoostRoot`) to a folder that
+holds `boost\version.hpp`, such as `C:\vcpkg\installed\x64-windows\include`. Then delete `build\windows-logic`, because
+CMake remembers the Boost it found, and run the script again.
 
 **Windows: the update never starts, or the check fails with a signature error.** The installer must be validly signed by
 the same certificate as the running app. A development build is unsigned, so it never runs an update. Update it by hand.
