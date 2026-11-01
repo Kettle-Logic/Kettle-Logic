@@ -366,6 +366,11 @@ instead of yours, and its headers don't work with Visual Studio. Set `BOOST_ROOT
 holds `boost\version.hpp`, such as `C:\vcpkg\installed\x64-windows\include`. Then delete `build\windows-logic`, because
 CMake remembers the Boost it found, and run the script again.
 
+**Windows: "SignTool Error: Invalid option".** The `-SignCommand` text reached `signtool` with a typo in it (for example,
+`/fd/ SHA256` instead of `/fd SHA256`). Copy the command exactly as written under [Publish for Windows](#publish-for-windows),
+in single quotes, and keep `$f`. If you have no certificate yet, leave `-SignCommand` off to build an unsigned installer for
+testing. That installer can't be published.
+
 **Windows: the update never starts, or the check fails with a signature error.** The installer must be validly signed by
 the same certificate as the running app. A development build is unsigned, so it never runs an update. Update it by hand.
 
