@@ -1,218 +1,145 @@
 # Kettle Logic
 
-A recipe design and brewing management app for homebrewers, with a shared C++ engine and native front ends for macOS, Windows, and Linux.
+Kettle Logic is free, open-source recipe software for beer, cider, mead, and wine. Design a recipe, check it against its
+style, and follow it step by step on brew day. It runs natively on macOS, Windows, and Linux, with no account and no
+sign-up. Your recipes stay on your computer.
 
-## Layout
+## What you can do
 
-```
-LICENSE                    MIT license
-docs/
-  architecture.md          layers, platform stacks, threading, decisions
-  units.md                 exact quantities, SI canonical storage, rounding rules
-  commands.md              unified command model (undo/redo, merging, composites)
-  model.md                 model layer interface: read/write, typed vs preserved, edits
-  calc.md                  recipe calculations: gravities, ABV, IBU, color, strike water
-  updates.md               how the app updates its engine and itself from GitHub Releases
-  formats/
-    beerjson-profile.md    Kettle Logic's BeerJSON 1.0 profile (primary format)
-    beerxml-import.md      BeerXML 2.01 import/export mapping (BeerSmith compatibility)
-core/                      C++20 engine (no UI code)
-  include/kettlelogic/     public headers
-    json.hpp               strict JSON with exact number lexemes
-    rational.hpp           exact rational numbers
-    quantity.hpp           exact quantities in SI canonical units
-    measure.hpp            exact, unconverted values (gravity, color, pH, ...)
-    command.hpp            generic undoable command stack
-    model/                 recipe model, BeerJSON reader/writer, sidecar, model commands
-    calc/                  recipe calculations (pure functions over the model)
-    catalog/               built-in data every front end reads: ingredients (malts, hops, yeasts, waters, additions) and the
-                           search, filter, and sort behind the ingredient picker,
-                           brewing systems, starter recipes, fermentation profiles, glossary, tool forms, option lists
-    io/                    atomic file save and load of a recipe and its sidecar
-    styles/                user-defined beer styles and their checks; the BJCP table is in calc/style.cpp
-  src/                     implementation
-  schemas/beerjson/        vendored upstream BeerJSON schema (pinned commit, see its README)
-  tests/                   engine tests, sample data, schema conformance check
-  tools/                   kettlelogic_roundtrip: read and rewrite a BeerJSON file
-tools/                     update_manifest.py: writes one platform's entry in the update list (updates.json)
-build/                     output of the build steps below, including release files and logs; not committed
-apps/                      platform front ends
-  macos/                   SwiftUI app (started)
-  windows/                 WinUI 3 with C++/WinRT (written, not yet compiled)
-  linux/                   GTK4 + libadwaita (written; builds and passes its smoke test, not yet run on Linux)
-```
+**Plan your recipes**
 
-## Versions
+- Work on beer, cider, mead, and wine in one app, and switch between them whenever you like.
+- Watch original and final gravity, ABV, IBU, and color (SRM, with EBC and Lovibond conversions) update as you edit.
+- Scale a recipe to a new batch size, and every ingredient follows.
+- Save your equipment profile once, so every recipe matches your setup.
+- Check a recipe against its style. Vital statistics for 86 BJCP 2021 styles are built in.
+- Plan the mash and boil: strike-water temperature, decoction and step volumes, and boil-off.
+- Use the water tools: ion blending, residual alkalinity, mash pH, and salt additions for a target profile.
+- Plan sugar and honey additions, estimate alcohol, and dose sulfites for cider, mead, and wine.
 
-The engine and each app have their own semantic versions. Every app's About box shows both.
+**Brew with confidence**
 
-- Engine: `core/include/kettlelogic/version.hpp`, which must equal the `project(... VERSION ...)` in `core/CMakeLists.txt`. The engine's tests check this.
-- macOS app: `app_version` and `app_build` in `apps/macos/make-app.sh`.
-- Linux app: `project(... VERSION ...)` in `apps/linux/CMakeLists.txt`.
-- Windows app: `KettleLogicUiVersion` in `apps/windows/KettleLogic/KettleLogic.Paths.props`.
+- Follow a recipe step by step on brew day, with timers for the steps that need them.
+- Print or export a brew sheet.
 
-The engine also has an interface number, `KL_ENGINE_ABI_VERSION` in `core/include/kettlelogic/c/kettlelogic.h`. An app loads only an engine with the same number. See [docs/updates.md](docs/updates.md).
+**Keep your data**
 
-## Building and testing the engine
+- Recipes are saved as BeerJSON 1.0 files on your computer.
+- Import BeerXML 1.0 and 2.01 (from BeerSmith, for example), and export BeerXML 2.01. Before an export, Kettle Logic tells
+  you what BeerXML cannot hold.
+- Undo and redo cover every edit, and an import is a single undo step.
+- Saves are atomic, so a crash during a save does not damage your recipe.
 
-Requirements: CMake 3.25+, a C++20 compiler, and Boost 1.80 or newer (header-only `multiprecision` is used for exact rationals). The schema conformance test also needs Python 3 with `jsonschema`.
+## Install
 
-On macOS with Homebrew:
+Download the file for your computer from the [Releases page](https://github.com/Kettle-Logic/Kettle-Logic/releases).
+Pick the newest release whose name starts with `app-v`.
+
+> **Status:** The macOS app is the most complete. The Windows and Linux apps are written but still being tested, so their
+> download may not be on the Releases page yet. If yours is missing, [build from source](#build-from-source).
+
+### macOS
+
+1. Download `KettleLogic-<version>-macos.dmg`.
+2. Open it and drag Kettle Logic into Applications.
+3. Open Kettle Logic from Applications.
+
+You need macOS 26.
+
+### Windows
+
+1. Download `KettleLogic-Setup-<version>-x64.exe`.
+2. Run it and follow the prompts. Run it as an administrator to install for everyone, or as yourself to install just for you.
+3. Open Kettle Logic from the Start menu.
+
+### Linux
+
+1. Install [Flatpak](https://flatpak.org/setup/) if you don't have it.
+2. Download `KettleLogic-<version>-x86_64.flatpak`.
+3. Install it, then run it:
+
+   ```sh
+   flatpak install KettleLogic-<version>-x86_64.flatpak
+   flatpak run org.kettlelogic.KettleLogic
+   ```
+
+## Update
+
+Kettle Logic checks for updates when it starts. You can also choose Check for Updates from the app menu (macOS) or
+Help menu (Windows, Linux). When an update is available, follow the prompts. Your recipes and settings are never touched.
+For platform details, see [docs/updates.md](docs/updates.md).
+
+## Where your files live
+
+| | Recipes | Settings and custom data |
+|---|---|---|
+| macOS | `~/KettleLogic/Recipes` | `~/Library/Application Support/KettleLogic` |
+| Windows | `%USERPROFILE%\KettleLogic\Recipes` | `%LOCALAPPDATA%\KettleLogic` |
+| Linux | `~/KettleLogic/Recipes` | `~/.var/app/org.kettlelogic.KettleLogic/data/KettleLogic` |
+
+Uninstalling or reinstalling leaves these folders alone. Back up the Recipes folder and you've backed up your work.
+
+## Build from source
+
+You only need this if you want to change Kettle Logic, or if there's no download for your system yet. Run every command
+from the repository root.
+
+### 1. Get the tools
+
+You need CMake 3.25 or newer, a C++20 compiler, and Boost 1.80 or newer (headers only). Tests also need Python 3 with
+`jsonschema`.
+
+**macOS** (Xcode 26.2 or newer, and [Homebrew](https://brew.sh)):
 
 ```sh
 brew install boost cmake
 python3 -m pip install jsonschema
 ```
 
-On Debian or Ubuntu 24.04 or newer:
+**Debian or Ubuntu 24.04 or newer:**
 
 ```sh
-sudo apt install build-essential cmake libboost-dev python3-jsonschema
+sudo apt install build-essential cmake pkg-config python3-jsonschema libboost-dev \
+  libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev
 ```
 
-On Fedora:
+**Fedora:**
 
 ```sh
-sudo dnf install gcc-c++ cmake boost-devel python3-jsonschema
+sudo dnf install gcc-c++ cmake pkgconf-pkg-config python3-jsonschema boost-devel \
+  gtk4-devel libadwaita-devel libsoup3-devel
 ```
 
-On Windows, from a Developer PowerShell for Visual Studio 2026 (see [Windows](#windows-winui-3-with-c-winrt) for the install list), with Boost from vcpkg:
+**Windows:** install Visual Studio 2026 with "Desktop development with C++" and "Windows application development". Then,
+in a Developer PowerShell:
 
 ```powershell
 vcpkg install boost-headers
 python -m pip install jsonschema
-$env:BOOST_ROOT = "C:\vcpkg\installed\x64-windows\include"
 ```
 
-Then, on macOS and Linux:
+### 2. Build and run
 
-```sh
-cmake -S core -B build/core
-cmake --build build/core
-ctest --test-dir build/core --output-on-failure
-```
-
-On Windows, the Visual Studio generator is multi-config, so the build and test steps name the configuration:
-
-```powershell
-cmake -S core -B build\core -G "Visual Studio 18 2026" -A x64
-cmake --build build\core --config Release
-ctest --test-dir build\core -C Release --output-on-failure
-```
-
-`apps\windows\build.ps1` does the same engine build and tests as part of the app build, so you only need the steps above
-to work on the engine by itself.
-
-The engine's outputs in `build/core` are:
-
-- `libkettlelogic_core.a`: the engine's C++ API. The Linux and Windows apps link it.
-- `libkettlelogic_c.a`: the C facade (`core/include/kettlelogic/c/kettlelogic.h`), linked statically by the tests.
-- `libkettlelogic_engine.dylib` on macOS (`.so` on Linux, `.dll` on Windows): the same facade as a shared library. The macOS
-  app loads it at launch, so the engine can be updated apart from the app. Build it with `--target kettlelogic_engine`.
-
-When the C facade changes, run `python3 core/tools/gen_engine_loader.py` (Python 3, no extra packages) to regenerate the
-macOS app's loader, `apps/macos/Sources/CKettleLogic/engine_loader.c`. The `engine_loader_current` test fails until you do.
-Also bump `KL_ENGINE_ABI_VERSION` in the header when the facade's interface changes. See [docs/updates.md](docs/updates.md).
-
-## Building the front ends
-
-The macOS app loads its engine from `build/core`, so build the engine there first. The Linux and Windows apps compile the
-engine as part of their own build, into `build/linux` and `build/windows-logic`, so they need no separate engine step.
-
-### macOS (SwiftUI)
-
-Requirements: macOS 26 with Xcode 26.2 or newer, which provides the Swift 6.2 toolchain and the macOS 26 SDK, and Homebrew's
-`boost` and `cmake` (see [Building and testing the engine](#building-and-testing-the-engine)).
-
-```sh
-cmake -S core -B build/core
-cmake --build build/core --target kettlelogic_engine
-cd apps/macos
-swift run KettleLogic
-```
-
-To start the app as a Mac app, with a menu bar and keyboard focus, build the bundle and open it:
+**macOS**
 
 ```sh
 apps/macos/make-app.sh
 open apps/macos/build/KettleLogic.app
 ```
 
-`make-app.sh` builds the engine, builds the app in release mode, and wraps it in `apps/macos/build/KettleLogic.app`, with the engine inside. The app checks GitHub for updates when it is built with `UPDATE_MANIFEST_URL` set. To publish a release, see [docs/updates.md](docs/updates.md) and `apps/macos/make-release.sh`. The CMake commands above only build the engine and run its tests; they do not start the app.
+To work in Xcode instead, open `apps/macos/KettleLogic.xcodeproj` and run the `KettleLogic` scheme. See
+[apps/macos/README.md](apps/macos/README.md) for the full Xcode workflow and troubleshooting.
 
-`swift run KettleLogic` also works, but it starts a bare executable from the shell, so use the bundle for everyday use.
+**Windows**
 
-To work in Xcode, open `apps/macos/KettleLogic.xcodeproj` and run the `KettleLogic` scheme. Its Build Engine phase runs the
-CMake build of `kettlelogic_engine` on every build, and its Embed Engine phase copies the library into the app, so no
-separate engine step is needed. To work on `apps/macos/Package.swift` instead, run the CMake steps above first, and again
-after each engine change, because that route loads the library from `build/core`. The full Xcode workflow, including
-signing setup notes and troubleshooting, is in [apps/macos/README.md](apps/macos/README.md).
-
-The app reaches the engine only through the C facade, so no C++ types reach the Swift code. The built-in data (`catalog/`) comes through the same facade as JSON (`kl_ingredient_catalog_json` and `kl_builtin_data_json`), so the Swift code holds no copy of it. Each edit is a command, so undo and redo cover all of them.
-
-#### Packaging: macOS (DMG)
-
-Requirements: Xcode 26.2 or newer, a Developer ID Application certificate in the keychain, a `notarytool` keychain
-profile, and Python 3. The `gh` tool is needed only to publish. The release scripts use Apple's `codesign`, `notarytool`,
-`stapler`, `hdiutil`, and `osascript`, which come with macOS and Xcode.
-
-Before a release:
-
-- Bump the app's version, `MARKETING_VERSION` in the Xcode project. Bump the engine's version, `kEngineVersion` in
-  `core/include/kettlelogic/version.hpp` and `project(... VERSION ...)` in `core/CMakeLists.txt`, and `KL_ENGINE_VERSION`
-  in the Xcode project, so all three agree.
-- Bump `KL_ENGINE_ABI_VERSION` only when the C facade's interface changed.
-- Run the engine's tests, as in [Building and testing the engine](#building-and-testing-the-engine).
-
-The app is signed in Xcode, which is the normal route to a release. Xcode's Developer ID signature, hardened runtime,
-and notarization are then run by the release scripts:
-
-1. In Xcode, choose Product > Archive, then Distribute App > Developer ID, and export `KettleLogic.app`.
-2. Create the notarization profile once: `xcrun notarytool store-credentials kettlelogic --apple-id YOU@EXAMPLE.COM --team-id YOUR_TEAM_ID`.
-   The command asks for an app-specific password, which is not your Apple ID password. Generate one at
-   [account.apple.com](https://account.apple.com) under Sign-In and Security > App-Specific Passwords (two-factor
-   authentication must be on for your Apple ID). Create a new one, label it something like `notarytool`, and paste it
-   when the command prompts. Apple shows it only once. `notarytool` stores it in your login keychain, so the release
-   scripts can use the `kettlelogic` profile without asking again.
-
-   `YOUR_TEAM_ID` is your 10-character Apple Developer Team ID. Find it at [developer.apple.com/account](https://developer.apple.com/account) under Membership details, or in the parentheses of the identity that `security find-identity -v -p codesigning` prints. It is not a secret, but it is yours, so it is not committed. The Xcode project ships with `DEVELOPMENT_TEAM` empty. In Xcode, set it under the KettleLogic target's Signing & Capabilities.
-3. Build the release files, from the repository root:
-
-   ```sh
-   APP=/path/to/Exported/KettleLogic.app NOTARY_PROFILE=kettlelogic \
-     SIGN_IDENTITY="Developer ID Application: Your Name (YOUR_TEAM_ID)" sh apps/macos/make-release.sh
-   ```
-
-   This checks that the app's versions agree with the engine's headers, notarizes and staples the app, makes the update
-   zip and the DMG (`apps/macos/make-dmg.sh`), notarizes the DMG, and writes `updates.json`. The files are in
-   `apps/macos/build/release`: `KettleLogic-<version>-macos.zip`, `KettleLogic-<version>-macos.dmg`,
-   `KettleLogic-engine-<engine version>-macos.dylib`, and `updates.json`.
-4. To publish, add `PUBLISH=1` to the same command. It uploads the files with the `gh` tool to `Kettle-Logic/Kettle-Logic`
-   and replaces `updates.json`. Without it, the files are only built.
-
-The DMG is the installer. Users drag the app into Applications. Recipes and settings are not in the app, so they are kept
-when the app is replaced. Details are in [docs/updates.md](docs/updates.md#publishing-a-release).
-
-### Linux (GTK4 and libadwaita)
-
-The Linux app has the same features as the macOS app, built from native libadwaita widgets. It links the engine directly,
-without the C facade, and shares the portable app logic with the Windows app. It builds and passes its smoke test with GTK
-4.24 on macOS, and has not been run on a Linux desktop yet. See [apps/linux/README.md](apps/linux/README.md) for the setup,
-what has been checked, and how it differs from the other apps.
-
-Requirements: GTK 4.12 or newer, libadwaita 1.5 or newer, libsoup 3, pkg-config, and a C++20 compiler. On Debian or Ubuntu 24.04 or newer:
-
-```sh
-sudo apt install build-essential cmake pkg-config libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev libboost-dev
+```powershell
+.\apps\windows\build.ps1 -Configuration Release -BoostRoot C:\vcpkg\installed\x64-windows\include
 ```
 
-On Fedora:
+The app lands in `build\windows-app\x64\Release`. Add `-Platform ARM64` for an ARM64 build, or `-SkipTests` to skip the
+engine tests. See [apps/windows/README.md](apps/windows/README.md) for more.
 
-```sh
-sudo dnf install gcc-c++ cmake pkgconf-pkg-config gtk4-devel libadwaita-devel libsoup3-devel boost-devel
-```
-
-Then:
+**Linux**
 
 ```sh
 cmake -S apps/linux -B build/linux
@@ -220,93 +147,75 @@ cmake --build build/linux
 build/linux/kettlelogic-gtk path/to/Recipe.json
 ```
 
-The engine is compiled into `build/linux/core` with the app, so there is no separate engine step. The smoke test is not part of
-the default build. To build and run it, see [apps/linux/README.md](apps/linux/README.md).
+See [apps/linux/README.md](apps/linux/README.md) for the smoke test and notes on how this app differs from the others.
 
-#### Packaging: Linux (Flatpak)
+### 3. Build a package (optional)
 
-The Flatpak is built on Linux, from the manifest `apps/linux/flatpak/org.kettlelogic.KettleLogic.yml`. Its runtime is
-GNOME 48. Boost's headers are fetched and pinned by SHA-256, and the app is built from this repository with the same CMake
-project as above. The Flatpak gets network access for the update check, and `~/KettleLogic` for recipes. The first build
-needs network access too, to download the runtime and the Boost source. Run the commands from the repository root.
+These make the same kind of file the Releases page offers, for your own use. They don't sign anything.
 
-Install the tools and the runtime once:
+- **Windows installer.** Install [Inno Setup 7](https://jrsoftware.org/isinfo.php), then run
+  `.\apps\windows\make-installer.ps1 -Configuration Release -Platform x64`. The installer is written to `dist\`.
+- **Linux Flatpak.** Install the tools and runtime once:
+
+  ```sh
+  sudo apt install flatpak flatpak-builder      # Fedora: sudo dnf install flatpak flatpak-builder
+  flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  flatpak install flathub org.gnome.Platform//48 org.gnome.Sdk//48
+  ```
+
+  Then build, install, and run it:
+
+  ```sh
+  flatpak-builder --force-clean --user --install build-flatpak apps/linux/flatpak/org.kettlelogic.KettleLogic.yml
+  flatpak run org.kettlelogic.KettleLogic
+  ```
+
+### Work on the engine
+
+The engine is the C++ core that all three apps share. To build and test it on its own:
 
 ```sh
-sudo apt install flatpak flatpak-builder      # Fedora: sudo dnf install flatpak flatpak-builder
-flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install flathub org.gnome.Platform//48 org.gnome.Sdk//48
+cmake -S core -B build/core
+cmake --build build/core
+ctest --test-dir build/core --output-on-failure
 ```
 
-Then, from the repository root:
+On Windows, add `-G "Visual Studio 18 2026" -A x64` to the first command, `--config Release` to the second, and
+`-C Release` to the third.
 
-```sh
-flatpak-builder --force-clean --user --install build-flatpak apps/linux/flatpak/org.kettlelogic.KettleLogic.yml
-flatpak run org.kettlelogic.KettleLogic
+If you change the C facade (`core/include/kettlelogic/c/kettlelogic.h`), run
+`python3 core/tools/gen_engine_loader.py` to regenerate the macOS loader. The `engine_loader_current` test fails until you do.
+If the facade's interface changed, also bump `KL_ENGINE_ABI_VERSION` in that header (see [docs/updates.md](docs/updates.md)).
+
+## How it's organized
+
+```
+core/          C++20 engine: recipe model, calculations, built-in data, file handling (no UI code)
+apps/macos/    SwiftUI app
+apps/windows/  WinUI 3 app (C++/WinRT)
+apps/linux/    GTK4 and libadwaita app
+tools/         update_manifest.py, which writes the update list
+docs/          design notes and the release guide
+build/         build output (not committed)
 ```
 
-To make a file for a GitHub release, build into a repository and bundle it:
+The design notes in [docs/](docs/) explain how things work:
 
-```sh
-flatpak-builder --force-clean --repo=build-repo build-flatpak apps/linux/flatpak/org.kettlelogic.KettleLogic.yml
-flatpak build-bundle build-repo KettleLogic-0.1.0-x86_64.flatpak org.kettlelogic.KettleLogic
-```
+- [architecture.md](docs/architecture.md): layers, platform stacks, and threading
+- [units.md](docs/units.md): exact quantities and rounding rules
+- [commands.md](docs/commands.md): the undo and redo model
+- [model.md](docs/model.md): the recipe model
+- [calc.md](docs/calc.md): how gravity, ABV, IBU, color, and strike water are calculated
+- [formats/beerjson-profile.md](docs/formats/beerjson-profile.md) and [formats/beerxml-import.md](docs/formats/beerxml-import.md): file formats
+- [updates.md](docs/updates.md): how updates work, and how to publish a release
 
-A bundle installed with `flatpak install KettleLogic-0.1.0-x86_64.flatpak` does not update with `flatpak update`. Its users
-install the next bundle from the release page. A copy installed from Flathub does update with `flatpak update`. Publishing
-the release and its update entry is in [docs/updates.md](docs/updates.md#publishing-a-windows-or-linux-release).
+## Help us out
 
-The manifest is written but has not yet been built by flatpak-builder. Its build steps are the same ones this README gives
-for Linux, and were run locally, installing to a scratch prefix, to check the installed layout. The runtime version is
-pinned; move it to the current GNOME runtime before a release.
-
-### Windows (WinUI 3 with C++/WinRT)
-
-The Windows app has the same features as the macOS app, built from native WinUI 3 controls. It links the engine directly,
-without the C facade. Its portable half builds and is tested on any platform. The WinUI project itself has not been compiled
-yet. See [apps/windows/README.md](apps/windows/README.md) for the setup, what has been checked, and how it differs from the
-Mac app.
-
-Requirements: Visual Studio 2026, with "Desktop development with C++" and "Windows application development"; CMake
-3.25 or newer and NuGet on the path (a Developer PowerShell has both with Visual Studio); and Boost 1.80 or newer, headers
-only (`vcpkg install boost-headers`). Then, from a Developer PowerShell in the repository root:
-
-```powershell
-.\apps\windows\build.ps1 -Configuration Release -BoostRoot C:\vcpkg\installed\x64-windows\include
-```
-
-The script compiles the engine into `build\windows-logic`, runs its tests, then builds the app into
-`build\windows-app\x64\Release`. `-SkipTests` skips the tests. Use `-Platform ARM64` for an ARM64 build.
-
-#### Packaging: Windows (Inno Setup installer)
-
-The installer is built on Windows, from `apps\windows\installer\KettleLogic.iss`, by `apps\windows\make-installer.ps1`. You
-need Visual Studio 2026 with the C++ and WinUI workloads (the same as `build.ps1`), and Inno Setup 7 from
-https://jrsoftware.org/isinfo.php. The app is self-contained, so the Windows App SDK runtime is included in the installer.
-
-From a Developer PowerShell, in the repository root:
-
-```powershell
-.\apps\windows\make-installer.ps1 -Configuration Release -Platform x64
-```
-
-This builds the app, then writes `dist\KettleLogic-Setup-<version>-x64.exe`. The version is read from
-`KettleLogic.Paths.props`. To sign the installer and its uninstaller, add a sign command, with `$f` where the file goes:
-
-```powershell
-.\apps\windows\make-installer.ps1 -SignCommand 'signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a $f'
-```
-
-Use the certificate the app is signed with. The in-app update installs only an installer signed by the same certificate.
-Pass `-SkipBuild` to package the last build again. Use `-Platform ARM64` for an ARM64 installer.
-
-The installer installs into Program Files when run as an administrator, and offers a per-user install otherwise. It
-never deletes user data: recipes stay in `%USERPROFILE%\KettleLogic\Recipes`, and settings stay in
-`%LOCALAPPDATA%\KettleLogic`. Publishing the installer and its update entry is in
-[docs/updates.md](docs/updates.md#publishing-a-windows-or-linux-release).
-
-The installer script has not been compiled yet. It needs a Windows machine with Inno Setup 7.
+- **Found a bug, or want a feature?** [Open an issue](https://github.com/Kettle-Logic/Kettle-Logic/issues).
+- **Spot a calculation that looks off?** Compare it with your brew notes or a reference, and tell us what differs.
+- **Want to write code?** Fork the repository, make your change, and open a pull request.
 
 ## License
 
-Kettle Logic is released under the [MIT License](LICENSE). The vendored BeerJSON schema in `core/schemas/beerjson` keeps its own license, in that folder.
+Kettle Logic is released under the [MIT License](LICENSE). The vendored BeerJSON schema in `core/schemas/beerjson` keeps
+its own license, in that folder.

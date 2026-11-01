@@ -80,5 +80,4 @@ if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE." }
 $installer = Join-Path $dist "KettleLogic-Setup-$version-$arch.exe"
 Write-Host "Built: $installer"
 Write-Host ''
-Write-Host 'To publish it, see docs\updates.md ("Publishing a Windows or Linux release"). In short:'
-Write-Host "  python tools\update_manifest.py updates.json windows --version $version --url <release file address> --file `"$installer`""
+Write-Host 'To publish it, run make-release.ps1 -Publish. See docs\updates.md.'
