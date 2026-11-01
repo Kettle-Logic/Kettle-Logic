@@ -54,8 +54,20 @@ You need macOS 26.
 2. Run it and follow the prompts. Run it as an administrator to install for everyone, or as yourself to install just for you.
 3. Open Kettle Logic from the Start menu.
 
-Free code signing for the Windows build is provided by [SignPath.io](https://signpath.io), with a certificate from the
-[SignPath Foundation](https://signpath.org).
+**About signing.** The Windows installer is self-signed. Code signing stamps a file with a digital signature, so Windows
+can tell who made it and whether it was changed afterward. Normally a certificate authority vouches for the signer. A
+self-signed file is signed with a certificate we made ourselves, so no one vouches for it. Windows SmartScreen may warn
+you when you run the installer. That warning is expected for now.
+
+To check that your download is the one we published, compare its SHA-256 hash with the published one. In PowerShell:
+
+```powershell
+Get-FileHash .\KettleLogic-Setup-<version>-x64.exe -Algorithm SHA256
+```
+
+The hash should match the `sha256` under `windows` in the
+[update list](https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json). GitHub also shows the
+hash beside the file on the release page. If they differ, don't run the installer. Download it again.
 
 ### Linux
 
