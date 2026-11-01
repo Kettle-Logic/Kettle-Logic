@@ -633,6 +633,112 @@ void SetTelemetryLevel(Host& host, const std::string& value) {
     telemetry::LevelChanged();
 }
 
+// A group of radio buttons, each a bold title over a caption, with one selected. `chosen` hears the selected index.
+ctl::RadioButtons ChoiceGroup(const std::vector<std::pair<std::string, std::string>>& items, int selected,
+                              std::function<void(int)> chosen) {
+    ctl::RadioButtons group;
+    for (const auto& [title, detail] : items) {
+        ctl::StackPanel panel;
+        panel.Spacing(2);
+        panel.Children().Append(ui::Text(title, ui::Kind::strong));
+        panel.Children().Append(ui::Text(detail, ui::Kind::caption));
+        ctl::RadioButton radio;
+        radio.Content(panel);
+        group.Items().Append(radio);
+    }
+    group.SelectedIndex(selected);
+    group.SelectionChanged([chosen = std::move(chosen)](auto const& sender, auto const&) {
+        const int index = sender.template as<ctl::RadioButtons>().SelectedIndex();
+        if (index >= 0) chosen(index);
+    });
+    return group;
+}
+
+struct AppearanceText {
+    const char* value;
+    const char* title;
+    const char* detail;
+};
+constexpr AppearanceText kAppearances[] = {
+    {"system", "Auto", "Follows the Windows setting."},
+    {"light", "Light", "Light colors in every window."},
+    {"dark", "Dark", "Dark colors in every window."},
+};
+
+// The dialog of one step of the first-launch setup. `stack` holds the step's choices, and is shown as the content.
+ui::DialogOptions SetupStep(int step, const std::string& question, ctl::StackPanel& stack) {
+    stack.Spacing(14);
+    stack.Width(440);
+    stack.Children().Append(ui::Text("Step " + std::to_string(step) + " of 3. " + question, ui::Kind::secondary));
+    ui::DialogOptions options;
+    options.title = "Welcome to Kettle Logic";
+    options.content = stack;
+    options.primaryText = step < 3 ? "Next" : "Done";
+    options.closeText = "";
+    return options;
+}
+
+void ShowInterfaceStep(Host& host) {
+    auto simple = std::make_shared<bool>(true);
+    ctl::StackPanel stack;
+    ui::DialogOptions options = SetupStep(3, "How much would you like to see?", stack);
+    stack.Children().Append(ChoiceGroup(
+        {{"Simple", "Recommended if you are new to brewing. Shows ingredients, results, style, and a brew-day procedure, "
+                    "and assumes typical values for the rest."},
+         {"Full", "Every setting: mash steps, water chemistry, yeast starters, boil-off, and detailed ingredient fields."}},
+        0, [simple](int index) { *simple = index == 0; }));
+    stack.Children().Append(ui::Text("You can change this any time in Settings under Interface, or from View \xE2\x96\xB8 Simple Mode.",
+                                     ui::Kind::caption));
+    options.primary = [&host, simple] {
+        host.store.preferences.setBoolean(PrefKey::simpleMode, *simple);
+        host.store.preferences.setBoolean(PrefKey::interfaceChosen, true);
+        host.refresh();
+        return true;
+    };
+    ui::ShowDialog(host.xamlRoot(), options);
+}
+
+void ShowAppearanceStep(Host& host) {
+    ctl::StackPanel stack;
+    ui::DialogOptions options = SetupStep(2, "Which colors would you like?", stack);
+    std::vector<std::pair<std::string, std::string>> items;
+    int selected = 0;
+    const std::string current = host.store.preferences.string(PrefKey::appearance);
+    for (int i = 0; i < static_cast<int>(std::size(kAppearances)); ++i) {
+        items.emplace_back(kAppearances[i].title, kAppearances[i].detail);
+        if (current == kAppearances[i].value) selected = i;
+    }
+    // The theme changes as it is picked, so the choice can be judged on this dialog.
+    stack.Children().Append(ChoiceGroup(items, selected, [&host](int index) {
+        host.store.preferences.setString(PrefKey::appearance, kAppearances[index].value);
+        ui::SetTheme(kAppearances[index].value);
+    }));
+    stack.Children().Append(ui::Text("You can change this any time in Settings under Appearance.", ui::Kind::caption));
+    ui::ShowDialog(host.xamlRoot(), options, [&host] { ShowInterfaceStep(host); });
+}
+
+void ShowTelemetryStep(Host& host) {
+    auto level = std::make_shared<std::string>(host.store.preferences.string(PrefKey::telemetryLevel));
+    ctl::StackPanel stack;
+    ui::DialogOptions options = SetupStep(1, "Help improve Kettle Logic by sharing anonymous data?", stack);
+    std::vector<std::pair<std::string, std::string>> items;
+    int selected = 0;
+    for (int i = 0; i < static_cast<int>(std::size(kTelemetryLevels)); ++i) {
+        items.emplace_back(kTelemetryLevels[i].title, kTelemetryLevels[i].detail);
+        if (*level == kTelemetryLevels[i].value) selected = i;
+    }
+    // Limited is selected, as it is when the question is never asked.
+    stack.Children().Append(ChoiceGroup(items, selected, [level](int index) { *level = kTelemetryLevels[index].value; }));
+    stack.Children().Append(ui::Text("You can change this any time in Settings under Privacy. Nothing about your recipes is ever "
+                                     "sent.", ui::Kind::caption));
+    options.primary = [&host, level] {
+        SetTelemetryLevel(host, *level);
+        telemetry::Start(host.store.preferences);
+        return true;
+    };
+    ui::ShowDialog(host.xamlRoot(), options, [&host] { ShowAppearanceStep(host); });
+}
+
 }  // namespace
 
 void ShowTelemetryNotice(Host& host) {
@@ -659,67 +765,10 @@ void ShowTelemetryNotice(Host& host) {
     });
 }
 
+// The first-launch setup: anonymous data, then the color theme, then the interface. Each step is its own dialog and saves
+// its answer as it is accepted; the last marks the setup done.
 void ShowInterfaceChoice(Host& host) {
-    auto simple = std::make_shared<bool>(true);
-    auto telemetryLevel = std::make_shared<std::string>(host.store.preferences.string(PrefKey::telemetryLevel));
-    ctl::StackPanel stack;
-    stack.Spacing(14);
-    stack.Width(440);
-    stack.Children().Append(ui::Text("How much would you like to see?", ui::Kind::secondary));
-
-    ctl::RadioButtons choices;
-    const auto option = [](const std::string& title, const std::string& detail) {
-        ctl::StackPanel panel;
-        panel.Spacing(2);
-        panel.Children().Append(ui::Text(title, ui::Kind::strong));
-        panel.Children().Append(ui::Text(detail, ui::Kind::caption));
-        ctl::RadioButton radio;
-        radio.Content(panel);
-        return radio;
-    };
-    choices.Items().Append(option("Simple", "Recommended if you are new to brewing. Shows ingredients, results, style, and a "
-                                             "brew-day procedure, and assumes typical values for the rest."));
-    choices.Items().Append(option("Full", "Every setting: mash steps, water chemistry, yeast starters, boil-off, and detailed "
-                                          "ingredient fields."));
-    choices.SelectedIndex(0);
-    choices.SelectionChanged([simple](auto const& sender, auto const&) {
-        *simple = sender.template as<ctl::RadioButtons>().SelectedIndex() == 0;
-    });
-    stack.Children().Append(choices);
-    stack.Children().Append(ui::Text("You can change this any time in Settings under Interface, or from View \xE2\x96\xB8 Simple Mode.",
-                                     ui::Kind::caption));
-
-    // Anonymous usage and error data. Limited is selected, as it is when the question is never asked.
-    stack.Children().Append(ui::Text("Help improve Kettle Logic by sharing anonymous data?", ui::Kind::secondary));
-    ctl::RadioButtons levels;
-    int selectedLevel = 0;
-    for (int i = 0; i < static_cast<int>(std::size(kTelemetryLevels)); ++i) {
-        levels.Items().Append(option(kTelemetryLevels[i].title, kTelemetryLevels[i].detail));
-        if (*telemetryLevel == kTelemetryLevels[i].value) selectedLevel = i;
-    }
-    levels.SelectedIndex(selectedLevel);
-    levels.SelectionChanged([telemetryLevel](auto const& sender, auto const&) {
-        const int index = sender.template as<ctl::RadioButtons>().SelectedIndex();
-        if (index >= 0) *telemetryLevel = kTelemetryLevels[index].value;
-    });
-    stack.Children().Append(levels);
-    stack.Children().Append(ui::Text("You can change this any time in Settings under Privacy. Nothing about your recipes "
-                                     "is ever sent.", ui::Kind::caption));
-
-    ui::DialogOptions options;
-    options.title = "Welcome to Kettle Logic";
-    options.content = stack;
-    options.primaryText = "Continue";
-    options.closeText = "";
-    options.primary = [&host, simple, telemetryLevel] {
-        host.store.preferences.setBoolean(PrefKey::simpleMode, *simple);
-        host.store.preferences.setBoolean(PrefKey::interfaceChosen, true);
-        SetTelemetryLevel(host, *telemetryLevel);
-        telemetry::Start(host.store.preferences);
-        host.refresh();
-        return true;
-    };
-    ui::ShowDialog(host.xamlRoot(), options);
+    ShowTelemetryStep(host);
 }
 
 // MARK: Settings

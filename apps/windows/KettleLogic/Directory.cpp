@@ -371,7 +371,7 @@ public:
         ctl::FontIcon icon;
         icon.Glyph(L"\xE8A5");
         icon.FontSize(48);
-        icon.Foreground(ui::ThemeBrush(L"TextFillColorSecondaryBrush"));
+        ui::UseStyle(icon, L"KLSecondaryGlyph");
         stack.Children().Append(icon);
         stack.Children().Append(ui::Text("No Recipe Selected", ui::Kind::subtitle));
         stack.Children().Append(ui::Text("Open a recipe, or start a new one.", ui::Kind::secondary));

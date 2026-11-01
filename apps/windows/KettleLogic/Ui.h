@@ -16,8 +16,9 @@ enum class Kind { body, strong, caption, secondary, title, subtitle, mono, error
 
 ctl::TextBlock Text(std::string_view text, Kind kind = Kind::body);
 
-// A brush from the theme, by its resource key, such as "TextFillColorSecondaryBrush".
-xaml::Media::Brush ThemeBrush(wchar_t const* key);
+// Gives an element one of the KL* styles in App.xaml, such as "KLCardBorder". A color that depends on the theme comes
+// from such a style, whose {ThemeResource} setters follow a theme chosen later. Do not fetch a brush and assign it.
+void UseStyle(xaml::FrameworkElement const& element, wchar_t const* key);
 
 // The color theme of every window and dialog: "system" follows Windows, "light" and "dark" override it.
 void SetTheme(std::string_view theme);

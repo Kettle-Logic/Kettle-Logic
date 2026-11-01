@@ -20,6 +20,114 @@ GtkWidget* Row(std::initializer_list<GtkWidget*> items) {
     return ui::HStack(items, 8);
 }
 
+// A group of radio buttons, each a bold title over a caption, with one selected. `chosen` hears the selected index.
+GtkWidget* ChoiceGroup(const std::vector<std::pair<std::string, std::string>>& items, int selected,
+                       std::function<void(int)> chosen) {
+    GtkWidget* group = ui::Box(GTK_ORIENTATION_VERTICAL, 8);
+    GtkWidget* first = nullptr;
+    auto hear = std::make_shared<std::function<void(int)>>(std::move(chosen));
+    for (int i = 0; i < static_cast<int>(items.size()); ++i) {
+        GtkWidget* panel = ui::Box(GTK_ORIENTATION_VERTICAL, 2);
+        ui::Append(panel, ui::Text(items[i].first, ui::Kind::strong));
+        ui::Append(panel, ui::Text(items[i].second, ui::Kind::caption));
+        GtkWidget* radio = gtk_check_button_new();
+        gtk_check_button_set_child(GTK_CHECK_BUTTON(radio), panel);
+        if (first != nullptr) gtk_check_button_set_group(GTK_CHECK_BUTTON(radio), GTK_CHECK_BUTTON(first));
+        if (first == nullptr) first = radio;
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(radio), i == selected);
+        ui::OnNotify(radio, "active", [radio, hear, i] {
+            if (gtk_check_button_get_active(GTK_CHECK_BUTTON(radio))) (*hear)(i);
+        });
+        ui::Append(group, radio);
+    }
+    return group;
+}
+
+struct AppearanceText {
+    const char* value;
+    const char* title;
+    const char* detail;
+};
+constexpr AppearanceText kAppearances[] = {
+    {"system", "Auto", "Follows the system setting."},
+    {"light", "Light", "Light colors in every window."},
+    {"dark", "Dark", "Dark colors in every window."},
+};
+
+// The dialog of one step of the first-launch setup. `stack` is filled with the step's choices, and is shown as the content.
+ui::DialogOptions SetupStep(int step, const std::string& question, GtkWidget* stack) {
+    ui::Margins(stack, 20, 8, 20, 20);
+    ui::Append(stack, ui::Text("Step " + std::to_string(step) + " of 3. " + question, ui::Kind::secondary));
+    ui::DialogOptions options;
+    options.title = "Welcome to Kettle Logic";
+    options.content = stack;
+    options.primaryText = step < 3 ? "Next" : "Done";
+    options.closeText = "";
+    options.width = 460;
+    return options;
+}
+
+void ShowInterfaceStep(Host& host) {
+    auto simple = std::make_shared<bool>(true);
+    GtkWidget* stack = ui::Box(GTK_ORIENTATION_VERTICAL, 14);
+    ui::DialogOptions options = SetupStep(3, "How much would you like to see?", stack);
+    ui::Append(stack, ChoiceGroup(
+        {{"Simple", "Recommended if you are new to brewing. Shows ingredients, results, style, and a brew-day procedure, "
+                    "and assumes typical values for the rest."},
+         {"Full", "Every setting: mash steps, water chemistry, yeast starters, boil-off, and detailed ingredient fields."}},
+        0, [simple](int index) { *simple = index == 0; }));
+    ui::Append(stack, ui::Text("You can change this any time in Settings under Interface, or from the main menu's Simple Mode.",
+                               ui::Kind::caption));
+    options.primary = [&host, simple] {
+        host.store.preferences.setBoolean(PrefKey::simpleMode, *simple);
+        host.store.preferences.setBoolean(PrefKey::interfaceChosen, true);
+        host.refresh();
+        return true;
+    };
+    ui::ShowDialog(host.widget(), options);
+}
+
+void ShowAppearanceStep(Host& host) {
+    GtkWidget* stack = ui::Box(GTK_ORIENTATION_VERTICAL, 14);
+    ui::DialogOptions options = SetupStep(2, "Which colors would you like?", stack);
+    std::vector<std::pair<std::string, std::string>> items;
+    int selected = 0;
+    const std::string current = host.store.preferences.string(PrefKey::appearance);
+    for (int i = 0; i < static_cast<int>(std::size(kAppearances)); ++i) {
+        items.emplace_back(kAppearances[i].title, kAppearances[i].detail);
+        if (current == kAppearances[i].value) selected = i;
+    }
+    // The theme changes as it is picked, so the choice can be judged on this dialog.
+    ui::Append(stack, ChoiceGroup(items, selected, [&host](int index) {
+        host.store.preferences.setString(PrefKey::appearance, kAppearances[index].value);
+        ui::ApplyAppearance(kAppearances[index].value);
+    }));
+    ui::Append(stack, ui::Text("You can change this any time in Settings under Appearance.", ui::Kind::caption));
+    ui::ShowDialog(host.widget(), options, [&host] { ShowInterfaceStep(host); });
+}
+
+void ShowTelemetryStep(Host& host) {
+    auto level = std::make_shared<std::string>(host.store.preferences.string(PrefKey::telemetryLevel));
+    GtkWidget* stack = ui::Box(GTK_ORIENTATION_VERTICAL, 14);
+    ui::DialogOptions options = SetupStep(1, "Help improve Kettle Logic by sharing anonymous data?", stack);
+    std::vector<std::pair<std::string, std::string>> items;
+    int selected = 0;
+    for (int i = 0; i < static_cast<int>(std::size(kTelemetryLevels)); ++i) {
+        items.emplace_back(kTelemetryLevels[i].title, kTelemetryLevels[i].detail);
+        if (*level == kTelemetryLevels[i].value) selected = i;
+    }
+    // Limited is selected, as it is when the question is never asked.
+    ui::Append(stack, ChoiceGroup(items, selected, [level](int index) { *level = kTelemetryLevels[index].value; }));
+    ui::Append(stack, ui::Text("You can change this any time in Settings under Privacy. Nothing about your recipes is ever "
+                               "sent.", ui::Kind::caption));
+    options.primary = [&host, level] {
+        SetTelemetryLevel(host, *level);
+        telemetry::Start(host.store.preferences);
+        return true;
+    };
+    ui::ShowDialog(host.widget(), options, [&host] { ShowAppearanceStep(host); });
+}
+
 }  // namespace
 
 // MARK: Ingredient editor
@@ -637,70 +745,10 @@ void ShowTelemetryNotice(Host& host) {
     });
 }
 
+// The first-launch setup: anonymous data, then the color theme, then the interface. Each step is its own dialog and saves
+// its answer as it is accepted; the last marks the setup done.
 void ShowInterfaceChoice(Host& host) {
-    auto simple = std::make_shared<bool>(true);
-    auto telemetryLevel = std::make_shared<std::string>(host.store.preferences.string(PrefKey::telemetryLevel));
-    GtkWidget* stack = ui::Box(GTK_ORIENTATION_VERTICAL, 14);
-    ui::Margins(stack, 20, 8, 20, 20);
-    ui::Append(stack, ui::Text("How much would you like to see?", ui::Kind::secondary));
-
-    GtkWidget* first = nullptr;
-    const auto option = [&](const std::string& title, const std::string& detail, bool selected, bool isSimple) {
-        GtkWidget* panel = ui::Box(GTK_ORIENTATION_VERTICAL, 2);
-        ui::Append(panel, ui::Text(title, ui::Kind::strong));
-        ui::Append(panel, ui::Text(detail, ui::Kind::caption));
-        GtkWidget* radio = gtk_check_button_new();
-        gtk_check_button_set_child(GTK_CHECK_BUTTON(radio), panel);
-        if (first != nullptr) gtk_check_button_set_group(GTK_CHECK_BUTTON(radio), GTK_CHECK_BUTTON(first));
-        if (first == nullptr) first = radio;
-        gtk_check_button_set_active(GTK_CHECK_BUTTON(radio), selected);
-        ui::OnNotify(radio, "active", [radio, simple, isSimple] {
-            if (gtk_check_button_get_active(GTK_CHECK_BUTTON(radio))) *simple = isSimple;
-        });
-        ui::Append(stack, radio);
-    };
-    option("Simple", "Recommended if you are new to brewing. Shows ingredients, results, style, and a "
-                     "brew-day procedure, and assumes typical values for the rest.", true, true);
-    option("Full", "Every setting: mash steps, water chemistry, yeast starters, boil-off, and detailed "
-                   "ingredient fields.", false, false);
-    ui::Append(stack, ui::Text("You can change this any time in Settings under Interface, or from the main menu's Simple Mode.",
-                               ui::Kind::caption));
-
-    // Anonymous usage and error data. Limited is selected, as it is when the question is never asked.
-    ui::Append(stack, ui::Text("Help improve Kettle Logic by sharing anonymous data?", ui::Kind::secondary));
-    GtkWidget* firstLevel = nullptr;
-    for (const TelemetryLevelText& level : kTelemetryLevels) {
-        GtkWidget* panel = ui::Box(GTK_ORIENTATION_VERTICAL, 2);
-        ui::Append(panel, ui::Text(level.title, ui::Kind::strong));
-        ui::Append(panel, ui::Text(level.detail, ui::Kind::caption));
-        GtkWidget* radio = gtk_check_button_new();
-        gtk_check_button_set_child(GTK_CHECK_BUTTON(radio), panel);
-        if (firstLevel != nullptr) gtk_check_button_set_group(GTK_CHECK_BUTTON(radio), GTK_CHECK_BUTTON(firstLevel));
-        if (firstLevel == nullptr) firstLevel = radio;
-        gtk_check_button_set_active(GTK_CHECK_BUTTON(radio), *telemetryLevel == level.value);
-        ui::OnNotify(radio, "active", [radio, telemetryLevel, value = std::string(level.value)] {
-            if (gtk_check_button_get_active(GTK_CHECK_BUTTON(radio))) *telemetryLevel = value;
-        });
-        ui::Append(stack, radio);
-    }
-    ui::Append(stack, ui::Text("You can change this any time in Settings under Privacy. Nothing about your recipes is ever "
-                               "sent.", ui::Kind::caption));
-
-    ui::DialogOptions options;
-    options.title = "Welcome to Kettle Logic";
-    options.content = stack;
-    options.primaryText = "Continue";
-    options.closeText = "";
-    options.width = 460;
-    options.primary = [&host, simple, telemetryLevel] {
-        host.store.preferences.setBoolean(PrefKey::simpleMode, *simple);
-        host.store.preferences.setBoolean(PrefKey::interfaceChosen, true);
-        SetTelemetryLevel(host, *telemetryLevel);
-        telemetry::Start(host.store.preferences);
-        host.refresh();
-        return true;
-    };
-    ui::ShowDialog(host.widget(), options);
+    ShowTelemetryStep(host);
 }
 
 // MARK: Settings

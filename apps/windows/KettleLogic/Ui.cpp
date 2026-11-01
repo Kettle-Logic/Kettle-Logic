@@ -42,22 +42,6 @@ xaml::ElementTheme ElementThemeFor(const std::string& theme) {
     return xaml::ElementTheme::Default;
 }
 
-// Looks a brush up in the Light or Dark variant of a dictionary and the dictionaries merged into it. The app's own
-// theme is fixed when it starts, so a theme chosen later has to be looked up by name.
-xaml::Media::Brush ThemedBrush(xaml::ResourceDictionary const& dictionary, winrt::hstring const& theme,
-                               winrt::Windows::Foundation::IInspectable const& name) {
-    const auto themes = dictionary.ThemeDictionaries();
-    if (themes.HasKey(box_value(theme))) {
-        if (const auto variant = themes.Lookup(box_value(theme)).try_as<xaml::ResourceDictionary>()) {
-            if (variant.HasKey(name)) return variant.Lookup(name).try_as<xaml::Media::Brush>();
-        }
-    }
-    for (const auto& merged : dictionary.MergedDictionaries()) {
-        if (auto found = ThemedBrush(merged, theme, name)) return found;
-    }
-    return nullptr;
-}
-
 }  // namespace
 
 void SetTheme(std::string_view theme) {
@@ -78,16 +62,8 @@ void FollowTheme(xaml::FrameworkElement const& root) {
     Followers().push_back(winrt::make_weak(root));
 }
 
-xaml::Media::Brush ThemeBrush(wchar_t const* key) {
-    auto resources = xaml::Application::Current().Resources();
-    const auto name = box_value(key);
-    if (CurrentTheme() != "system") {
-        if (auto found = ThemedBrush(resources, CurrentTheme() == "dark" ? L"Dark" : L"Light", name)) return found;
-    }
-    if (resources.HasKey(name)) {
-        return resources.Lookup(name).as<xaml::Media::Brush>();
-    }
-    return nullptr;
+void UseStyle(xaml::FrameworkElement const& element, wchar_t const* key) {
+    if (auto style = LookupStyle(key)) element.Style(style);
 }
 
 xaml::Media::SolidColorBrush Solid(int r, int g, int b) {
@@ -109,11 +85,10 @@ ctl::TextBlock Text(std::string_view text, Kind kind) {
             if (auto style = LookupStyle(L"BodyStrongTextBlockStyle")) block.Style(style);
             break;
         case Kind::caption:
-            if (auto style = LookupStyle(L"CaptionTextBlockStyle")) block.Style(style);
-            block.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
+            UseStyle(block, L"KLCaptionText");
             break;
         case Kind::secondary:
-            block.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
+            UseStyle(block, L"KLSecondaryText");
             break;
         case Kind::title:
             if (auto style = LookupStyle(L"TitleTextBlockStyle")) block.Style(style);
@@ -125,10 +100,10 @@ ctl::TextBlock Text(std::string_view text, Kind kind) {
             block.FontFamily(xaml::Media::FontFamily(L"Consolas"));
             break;
         case Kind::error:
-            block.Foreground(ThemeBrush(L"SystemFillColorCriticalBrush"));
+            UseStyle(block, L"KLErrorText");
             break;
         case Kind::success:
-            block.Foreground(ThemeBrush(L"SystemFillColorSuccessBrush"));
+            UseStyle(block, L"KLSuccessText");
             break;
     }
     return block;
@@ -336,7 +311,7 @@ xaml::UIElement HelpLabel(std::string_view title, std::string_view explanation, 
     info.Padding(Thickness{4, 4, 4, 4});
     info.Background(ColorBrush(winrt::Microsoft::UI::Colors::Transparent()));
     info.BorderThickness(Thickness{0, 0, 0, 0});
-    info.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
+    UseStyle(info, L"KLInfoButton");
     SetTip(info, explanation);
     ctl::Flyout flyout;
     ctl::TextBlock body = Text(explanation);
@@ -360,8 +335,7 @@ void Form::Flush() {
         return;
     }
     ctl::Border card;
-    card.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush"));
-    card.BorderBrush(ThemeBrush(L"CardStrokeColorDefaultBrush"));
+    UseStyle(card, L"KLCardBorder");
     card.BorderThickness(Thickness{1, 1, 1, 1});
     card.CornerRadius(xaml::CornerRadius{8, 8, 8, 8});
     card.Child(rows_);
@@ -429,7 +403,7 @@ void Form::AddRow(xaml::UIElement const& row) {
     if (rows_.Children().Size() > 0) {
         ctl::Border divider;
         divider.Height(1);
-        divider.Background(ThemeBrush(L"DividerStrokeColorDefaultBrush"));
+        UseStyle(divider, L"KLDivider");
         rows_.Children().Append(divider);
     }
     ctl::Border cell;

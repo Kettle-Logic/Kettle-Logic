@@ -144,19 +144,19 @@ void BrewDayWindow::Rebuild() {
         tick.Glyph(isDone ? L"\xE73E" : L"\xEA3A");  // a check mark, or an empty circle
         tick.FontSize(30);
         tick.VerticalAlignment(xaml::VerticalAlignment::Top);
-        tick.Foreground(isDone ? ui::ThemeBrush(L"SystemFillColorSuccessBrush") : ui::ThemeBrush(L"TextFillColorSecondaryBrush"));
+        ui::UseStyle(tick, isDone ? L"KLSuccessGlyph" : L"KLSecondaryGlyph");
         card.Children().Append(tick);
 
         ctl::StackPanel texts;
         texts.Spacing(6);
         ctl::TextBlock heading = ui::Text(step.minute ? step.phase + " \xC2\xB7 " + std::to_string(*step.minute) + " min" : step.phase,
                                           ui::Kind::strong);
-        heading.Foreground(ui::ThemeBrush(L"TextFillColorSecondaryBrush"));
+        ui::UseStyle(heading, L"KLStrongSecondaryText");
         texts.Children().Append(heading);
         ctl::TextBlock text = ui::Text(step.text);
         text.FontSize(isCurrent ? 28 : 22);
         if (isCurrent) text.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
-        if (step.warning) text.Foreground(ui::ThemeBrush(L"SystemFillColorCriticalBrush"));
+        if (step.warning) ui::UseStyle(text, L"KLErrorText");
         if (isDone) {
             ctl::TextBlock struck = text;
             struck.TextDecorations(winrt::Windows::UI::Text::TextDecorations::Strikethrough);
@@ -171,7 +171,8 @@ void BrewDayWindow::Rebuild() {
         button.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
         button.CornerRadius(xaml::CornerRadius{14, 14, 14, 14});
         button.Padding(xaml::Thickness{0, 0, 0, 0});
-        button.Background(isCurrent ? xaml::Media::Brush(AccentTint(0.18)) : ui::ThemeBrush(L"CardBackgroundFillColorDefaultBrush"));
+        ui::UseStyle(button, L"KLCardButton");
+        if (isCurrent) button.Background(AccentTint(0.18));
         button.Opacity(isDone ? 0.5 : 1);
         ui::SetTip(button, isDone ? "Click to untick" : "Click to tick off");
         button.Click([this, index](auto const&, auto const&) {
@@ -206,7 +207,7 @@ void BrewDayWindow::Rebuild() {
                 if (countdown.finished) {
                     ctl::TextBlock up = ui::Text("\xF0\x9F\x94\x94 Time's up", ui::Kind::strong);
                     up.FontSize(22);
-                    up.Foreground(ui::ThemeBrush(L"SystemFillColorCautionBrush"));
+                    ui::UseStyle(up, L"KLCautionText");
                     up.VerticalAlignment(xaml::VerticalAlignment::Center);
                     timer.Children().Append(up);
                 } else {
@@ -263,8 +264,7 @@ void BrewDayWindow::Rebuild() {
 
     ctl::Border footer;
     footer.Padding(xaml::Thickness{24, 12, 24, 12});
-    footer.Background(ui::ThemeBrush(L"LayerFillColorDefaultBrush"));
-    footer.BorderBrush(ui::ThemeBrush(L"DividerStrokeColorDefaultBrush"));
+    ui::UseStyle(footer, L"KLBarBorder");
     footer.BorderThickness(xaml::Thickness{0, 1, 0, 0});
     ctl::ToggleSwitch keepOn;
     keepOn.Header(box_value(L"Keep display on"));

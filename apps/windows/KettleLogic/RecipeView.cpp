@@ -181,7 +181,7 @@ private:
         // A thin line under each bar, as the macOS screen has between the tabs, the results strip, and the form.
         for (const ctl::ContentControl& bar : {groupBar_, tabBar_, strip_}) {
             bar.BorderThickness(xaml::Thickness{0, 0, 0, 1});
-            bar.BorderBrush(ui::ThemeBrush(L"DividerStrokeColorDefaultBrush"));
+            ui::UseStyle(bar, L"KLBarLine");
         }
         content_.VerticalContentAlignment(xaml::VerticalAlignment::Stretch);
     }
@@ -376,7 +376,7 @@ private:
                 ellipse.Width(12);
                 ellipse.Height(12);
                 ellipse.Fill(ui::Solid(rgb.r, rgb.g, rgb.b));
-                ellipse.Stroke(ui::ThemeBrush(L"ControlStrongStrokeColorDefaultBrush"));
+                ui::UseStyle(ellipse, L"KLSwatchOutline");
                 ellipse.StrokeThickness(0.5);
                 dot.Children().Append(ellipse);
                 line.Children().Append(dot);
@@ -391,17 +391,17 @@ private:
                     switch (*fit) {
                         case calc::Fit::Within:
                             mark.Glyph(L"\xE73E");
-                            mark.Foreground(ui::ThemeBrush(L"SystemFillColorSuccessBrush"));
+                            ui::UseStyle(mark, L"KLSuccessGlyph");
                             line.Children().Append(mark);
                             break;
                         case calc::Fit::Below:
                             mark.Glyph(L"\xE74B");
-                            mark.Foreground(ui::ThemeBrush(L"SystemFillColorCautionBrush"));
+                            ui::UseStyle(mark, L"KLCautionGlyph");
                             line.Children().Append(mark);
                             break;
                         case calc::Fit::Above:
                             mark.Glyph(L"\xE74A");
-                            mark.Foreground(ui::ThemeBrush(L"SystemFillColorCautionBrush"));
+                            ui::UseStyle(mark, L"KLCautionGlyph");
                             line.Children().Append(mark);
                             break;
                         case calc::Fit::Unknown: break;
@@ -458,9 +458,8 @@ private:
         button.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
         button.Padding(xaml::Thickness{12, 8, 12, 8});
         button.CornerRadius(xaml::CornerRadius{0, 0, 0, 0});
-        button.Background(ui::ThemeBrush(L"LayerFillColorDefaultBrush"));
+        ui::UseStyle(button, L"KLStripButton");
         button.BorderThickness(xaml::Thickness{0, 0, 0, 1});
-        button.BorderBrush(ui::ThemeBrush(L"DividerStrokeColorDefaultBrush"));
         ui::SetTip(button, "Show the full results");
         button.Click([this](auto const&, auto const&) { Select(Tab::results); });
         return button;
@@ -705,13 +704,13 @@ private:
         ctl::Border back;
         back.Height(6);
         back.CornerRadius(xaml::CornerRadius{3, 3, 3, 3});
-        back.Background(ui::ThemeBrush(L"ControlStrongFillColorDisabledBrush"));
+        ui::UseStyle(back, L"KLTrackBack");
         back.VerticalAlignment(xaml::VerticalAlignment::Center);
         track.Children().Append(back);
         ctl::Border shade;
         shade.Height(6);
         shade.CornerRadius(xaml::CornerRadius{3, 3, 3, 3});
-        shade.Background(ui::ThemeBrush(L"AccentFillColorDefaultBrush"));
+        ui::UseStyle(shade, L"KLTrackShade");
         shade.Opacity(0.6);
         shade.VerticalAlignment(xaml::VerticalAlignment::Center);
         ctl::Grid::SetColumn(shade, 1);
@@ -733,7 +732,7 @@ private:
         winrt::Microsoft::UI::Xaml::Shapes::Ellipse dot;
         dot.Width(10);
         dot.Height(10);
-        dot.Fill(ui::ThemeBrush(L"TextFillColorPrimaryBrush"));
+        ui::UseStyle(dot, L"KLMarkerDot");
         dot.Margin(xaml::Thickness{-5, 0, -5, 0});
         ctl::Grid::SetColumn(dot, 1);
         marker.Children().Append(dot);

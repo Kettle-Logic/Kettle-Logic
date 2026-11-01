@@ -76,7 +76,7 @@ void BuildProcedureTab(RecipeContext& c, ui::Form& form) {
             panel.Children().Append(ui::Text(StepHeading(step), ui::Kind::caption));
             ctl::TextBlock text = ui::Text(step.text);
             if (step.warning) {
-                text.Foreground(ui::ThemeBrush(L"SystemFillColorCriticalBrush"));
+                ui::UseStyle(text, L"KLErrorText");
             }
             panel.Children().Append(text);
             form.Wide(panel);
