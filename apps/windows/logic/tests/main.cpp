@@ -1088,11 +1088,18 @@ void testAppUpdates() {
     CHECK(!updates::matchesSha256("abd", "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
 
     // The check, through a transport. It asks for the given address, and never throws.
-    FakeTransport current(kManifest, false);
+    // check() compares with the real kAppVersion, so the listed version is far ahead of it and the test needs no edit
+    // when the app's version is bumped.
+    const char* kFarAheadManifest = R"({
+  "schema": 1,
+  "windows": {"version": "99.0.0", "url": "https://example.com/Setup.exe",
+              "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"}
+})";
+    FakeTransport current(kFarAheadManifest, false);
     const updates::CheckResult offered = updates::check(current, Platform::windows, "https://example.com/u.json");
     CHECK(current.requested_ == "https://example.com/u.json");
     CHECK(offered.status == updates::CheckResult::Status::available);
-    CHECK(offered.release.has_value() && offered.release->version == (Version{0, 2, 0}));
+    CHECK(offered.release.has_value() && offered.release->version == (Version{99, 0, 0}));
 
     FakeTransport failing(kManifest, true);
     const updates::CheckResult offline = updates::check(failing, Platform::windows);
