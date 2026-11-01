@@ -54,6 +54,34 @@ constexpr AppearanceText kAppearances[] = {
     {"dark", "Dark", "Dark colors in every window."},
 };
 
+// The three telemetry levels, as the first-launch dialog, the notice, and Settings describe them. docs/privacy.md lists
+// exactly what each one sends.
+struct TelemetryLevelText {
+    const char* value;
+    const char* title;
+    const char* detail;
+};
+constexpr TelemetryLevelText kTelemetryLevels[] = {
+    {"off", "Off", "Nothing is sent."},
+    {"limited", "Limited",
+     "Crash and error reports, and that the app was opened, with the app and system version. Nothing about your recipes."},
+    {"enhanced", "Enhanced",
+     "Also which features are used, such as exporting or a tool. Still anonymous, and never your recipes."},
+};
+
+std::vector<ui::Choice> TelemetryChoices() {
+    std::vector<ui::Choice> choices;
+    for (const TelemetryLevelText& level : kTelemetryLevels) choices.push_back({level.value, level.title});
+    return choices;
+}
+
+// Records a new telemetry level, and tells the reporter.
+void SetTelemetryLevel(Host& host, const std::string& value) {
+    host.store.preferences.setString(PrefKey::telemetryLevel, value);
+    host.store.preferences.setBoolean(PrefKey::telemetryNoticeShown, true);
+    telemetry::LevelChanged();
+}
+
 // The dialog of one step of the first-launch setup. `stack` is filled with the step's choices, and is shown as the content.
 ui::DialogOptions SetupStep(int step, const std::string& question, GtkWidget* stack) {
     ui::Margins(stack, 20, 8, 20, 20);
@@ -688,38 +716,6 @@ void ShowNameDialog(Host& host, std::string title, std::string actionTitle, std:
 }
 
 // MARK: Interface choice
-
-namespace {
-
-// The three telemetry levels, as the first-launch dialog, the notice, and Settings describe them. docs/privacy.md lists
-// exactly what each one sends.
-struct TelemetryLevelText {
-    const char* value;
-    const char* title;
-    const char* detail;
-};
-constexpr TelemetryLevelText kTelemetryLevels[] = {
-    {"off", "Off", "Nothing is sent."},
-    {"limited", "Limited",
-     "Crash and error reports, and that the app was opened, with the app and system version. Nothing about your recipes."},
-    {"enhanced", "Enhanced",
-     "Also which features are used, such as exporting or a tool. Still anonymous, and never your recipes."},
-};
-
-std::vector<ui::Choice> TelemetryChoices() {
-    std::vector<ui::Choice> choices;
-    for (const TelemetryLevelText& level : kTelemetryLevels) choices.push_back({level.value, level.title});
-    return choices;
-}
-
-// Records a new telemetry level, and tells the reporter.
-void SetTelemetryLevel(Host& host, const std::string& value) {
-    host.store.preferences.setString(PrefKey::telemetryLevel, value);
-    host.store.preferences.setBoolean(PrefKey::telemetryNoticeShown, true);
-    telemetry::LevelChanged();
-}
-
-}  // namespace
 
 void ShowTelemetryNotice(Host& host) {
     GtkWidget* stack = ui::Box(GTK_ORIENTATION_VERTICAL, 12);
