@@ -1,7 +1,7 @@
 #include "telemetry.hpp"
 
 #include "kettlelogic/app/app_updates.hpp"
-#include "kettlelogic/c/kettlelogic.h"
+#include "kettlelogic/version.hpp"
 #include "platform.hpp"
 
 #include <libsoup/soup.h>
@@ -79,7 +79,7 @@ analytics::Context MakeContext() {
     analytics::Context context;
     context.platform = "linux";
     context.appVersion = updates::kAppVersion;
-    context.engineVersion = kl_engine_version();
+    context.engineVersion = kettlelogic::kEngineVersion;
     char* osVersion = g_get_os_info(G_OS_INFO_KEY_VERSION_ID);
     context.osVersion = Major(osVersion);
     g_free(osVersion);
