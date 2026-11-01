@@ -139,6 +139,8 @@ public:
     HelpWindow(Host& host, std::function<void(HelpWindow*)> closed);
     ~HelpWindow();
     void Activate() { window_.Activate(); }
+    // Shows the pages in the app's color theme.
+    void ApplyTheme();
 
 private:
     winrt::fire_and_forget Start();

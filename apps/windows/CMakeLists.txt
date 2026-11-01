@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(KettleLogicAppLogic VERSION 0.1.0 LANGUAGES CXX)
+project(KettleLogicAppLogic VERSION 0.2.0 LANGUAGES CXX)
 
 # The portable half of the Windows app: the engine adapter, the app's data and settings, and its state.
 # It has no UI and no platform API beyond the C++ standard library, so it builds and is tested on any

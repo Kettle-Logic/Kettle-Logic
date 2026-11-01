@@ -128,6 +128,7 @@ ToolWindow::ToolWindow(Host& host, ToolKind kind, std::map<std::string, std::str
                        std::function<void(ToolWindow*)> closed)
     : view_(kind, std::move(prefill), host.store.waterProfiles) {
     window_.Title(platform::H(toolSpec(kind).title));
+    ui::FollowTheme(view_.Root().as<xaml::FrameworkElement>());
     window_.Content(view_.Root());
     try {
         window_.SystemBackdrop(xaml::Media::MicaBackdrop());

@@ -9,7 +9,7 @@
 # https://developer.apple.com/account), then:
 #
 #   NOTARY_PROFILE=kettlelogic sh notarize.sh path/to/KettleLogic.app
-#   NOTARY_PROFILE=kettlelogic sh notarize.sh path/to/KettleLogic-0.1.0-macos.dmg
+#   NOTARY_PROFILE=kettlelogic sh notarize.sh path/to/KettleLogic-0.2.0-macos.dmg
 #
 # notarytool --wait returns when Apple has decided. A rejected item stops this script, because stapling fails.
 set -e

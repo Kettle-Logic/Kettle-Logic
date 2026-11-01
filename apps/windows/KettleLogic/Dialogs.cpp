@@ -747,6 +747,14 @@ void ShowSettings(Host& host) {
                          host.refresh();
                      }));
 
+        form.Section("Appearance", "Light or dark colors for every window. System follows the Windows setting.");
+        form.Labeled("Color theme", ui::Picker({{"system", "System"}, {"light", "Light"}, {"dark", "Dark"}},
+                                               prefs.string(PrefKey::appearance), [&host](std::string value) {
+                                                   host.store.preferences.setString(PrefKey::appearance, value);
+                                                   ui::SetTheme(value);
+                                                   host.refresh();
+                                               }, 160));
+
         form.Section("Updates", "Checks the update list on GitHub when the app starts, and offers a newer version if there is "
                                 "one. Check for Updates in the Help menu always checks. An update is run only when it is "
                                 "signed by the same publisher as this app.");

@@ -12,7 +12,7 @@ namespace kettlelogic::app::updates {
 
 // The app's version. Keep it equal to the Linux app's project version (apps/linux/CMakeLists.txt) and the Windows
 // app's KettleLogicUiVersion (apps/windows/KettleLogic/KettleLogic.Paths.props). The tests check that they agree.
-inline constexpr const char* kAppVersion = "0.1.0";
+inline constexpr const char* kAppVersion = "0.2.0";
 
 // Where the update list lives. A build can point elsewhere with KETTLELOGIC_UPDATE_MANIFEST_URL.
 #ifdef KETTLELOGIC_UPDATE_MANIFEST_URL

@@ -23,6 +23,9 @@ enum class Kind { body, strong, caption, secondary, title, subtitle, mono, error
 // handlers: it is rebuilt from here.
 void Later(Callback work);
 
+// Sets the color theme of every window: "system" follows the desktop, "light" and "dark" override it.
+void ApplyAppearance(std::string_view appearance);
+
 // Calls `callback` when a signal with no arguments beyond the instance fires, such as "clicked" or "activate".
 void On(gpointer instance, const char* signal, Callback callback);
 // Calls `callback` when an action is activated. An action's signal carries a parameter, so it has its own.

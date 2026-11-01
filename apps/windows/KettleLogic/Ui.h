@@ -18,6 +18,12 @@ ctl::TextBlock Text(std::string_view text, Kind kind = Kind::body);
 
 // A brush from the theme, by its resource key, such as "TextFillColorSecondaryBrush".
 xaml::Media::Brush ThemeBrush(wchar_t const* key);
+
+// The color theme of every window and dialog: "system" follows Windows, "light" and "dark" override it.
+void SetTheme(std::string_view theme);
+std::string Theme();
+// Gives a window's content or a dialog the chosen theme, and keeps it following later changes.
+void FollowTheme(xaml::FrameworkElement const& root);
 xaml::Media::SolidColorBrush Solid(int r, int g, int b);
 
 struct Choice {

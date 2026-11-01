@@ -2,7 +2,7 @@
 # Packs Kettle Logic.app into a DMG, with a link to Applications beside it, so the user drags the app across.
 # The window shows dmg-background.png (with its @2x twin) and the two icons are placed on top of it.
 #
-#   sh make-dmg.sh path/to/KettleLogic.app path/to/KettleLogic-0.1.0-macos.dmg
+#   sh make-dmg.sh path/to/KettleLogic.app path/to/KettleLogic-0.2.0-macos.dmg
 #
 # SIGN_IDENTITY signs the DMG with a Developer ID, which notarization needs. Left unset, the DMG is not signed.
 # Laying out the window asks Finder to run, so the first build may prompt to let Terminal control Finder.

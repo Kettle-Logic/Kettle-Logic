@@ -9,7 +9,7 @@
 set -e
 
 # The app's own version, shown in About Kettle Logic. The engine's version is kettlelogic/version.hpp, separately.
-app_version="0.1.0"
+app_version="0.2.0"
 app_build="1"
 
 # Where the app looks for updates: the update list on GitHub. Set UPDATE_MANIFEST_URL to use another, or to an empty

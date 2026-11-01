@@ -728,6 +728,13 @@ void ShowSettings(Host& host) {
                          host.refresh();
                      }));
 
+        form.Section("Appearance", "Light or dark colors for every window. System follows the desktop's setting.");
+        form.Labeled("Color theme", ui::Picker({{"system", "System"}, {"light", "Light"}, {"dark", "Dark"}},
+                                               prefs.string(PrefKey::appearance), [&host](std::string value) {
+                                                   host.store.preferences.setString(PrefKey::appearance, value);
+                                                   ui::ApplyAppearance(value);
+                                               }, 160));
+
         form.Section("Updates", "Checks the update list on GitHub when the app starts, and offers a newer version if there is "
                                 "one. A Flatpak app is updated with flatpak update. Check for Updates in the main menu always checks.");
         form.Labeled("Check for updates when Kettle Logic starts", ui::Switch(prefs.boolean(PrefKey::checkForUpdates), [&host](bool on) {

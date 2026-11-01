@@ -20,6 +20,7 @@ struct KettleLogicApp: App {
         // it has no menu bar and does not take keyboard focus.
         NSApplication.shared.setActivationPolicy(.regular)
         UserDefaults.standard.register(defaults: Preferences.defaults)
+        Appearance.apply()
 
         _store = State(initialValue: DocumentStore())
         _waterProfiles = State(initialValue: WaterProfileLibrary())

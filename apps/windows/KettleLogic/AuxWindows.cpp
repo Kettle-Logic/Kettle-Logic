@@ -43,6 +43,7 @@ BrewDayWindow::BrewDayWindow(Host& host, BrewDayPlan plan, std::function<void(Br
     : host_(host), plan_(std::move(plan)) {
     done_ = plan_.loadProgress(host_.store.preferences);
     window_.Title(H("Brew Day: " + plan_.recipeName));
+    ui::FollowTheme(content_);
     window_.Content(content_);
     try {
         window_.SystemBackdrop(xaml::Media::MicaBackdrop());
@@ -319,6 +320,7 @@ HelpWindow::HelpWindow(Host& host, std::function<void(HelpWindow*)> closed) : ho
         list_.SelectedIndex(0);
         Start();
     }
+    ui::FollowTheme(root);
     window_.Content(root);
     try {
         window_.SystemBackdrop(xaml::Media::MicaBackdrop());
@@ -365,11 +367,25 @@ winrt::fire_and_forget HelpWindow::Start() {
         }
     });
     ready_ = true;
+    ApplyTheme();
     if (!pending_.empty()) {
         const std::string id = pending_;
         pending_.clear();
         shown_.clear();
         Show(id);
+    }
+}
+
+// The pages follow the app's color theme rather than the system's.
+void HelpWindow::ApplyTheme() {
+    if (!ready_) return;
+    using winrt::Microsoft::Web::WebView2::Core::CoreWebView2PreferredColorScheme;
+    const std::string theme = ui::Theme();
+    try {
+        web_.CoreWebView2().Profile().PreferredColorScheme(theme == "light"  ? CoreWebView2PreferredColorScheme::Light
+                                                           : theme == "dark" ? CoreWebView2PreferredColorScheme::Dark
+                                                                             : CoreWebView2PreferredColorScheme::Auto);
+    } catch (winrt::hresult_error const&) {
     }
 }
 

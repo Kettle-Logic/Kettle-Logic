@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <vector>
 
 namespace kl::ui {
 
@@ -25,11 +26,64 @@ xaml::Style LookupStyle(wchar_t const* key) {
     return nullptr;
 }
 
+std::string& CurrentTheme() {
+    static std::string theme = "system";
+    return theme;
+}
+
+std::vector<winrt::weak_ref<xaml::FrameworkElement>>& Followers() {
+    static std::vector<winrt::weak_ref<xaml::FrameworkElement>> followers;
+    return followers;
+}
+
+xaml::ElementTheme ElementThemeFor(const std::string& theme) {
+    if (theme == "light") return xaml::ElementTheme::Light;
+    if (theme == "dark") return xaml::ElementTheme::Dark;
+    return xaml::ElementTheme::Default;
+}
+
+// Looks a brush up in the Light or Dark variant of a dictionary and the dictionaries merged into it. The app's own
+// theme is fixed when it starts, so a theme chosen later has to be looked up by name.
+xaml::Media::Brush ThemedBrush(xaml::ResourceDictionary const& dictionary, winrt::hstring const& theme,
+                               winrt::Windows::Foundation::IInspectable const& name) {
+    const auto themes = dictionary.ThemeDictionaries();
+    if (themes.HasKey(box_value(theme))) {
+        if (const auto variant = themes.Lookup(box_value(theme)).try_as<xaml::ResourceDictionary>()) {
+            if (variant.HasKey(name)) return variant.Lookup(name).try_as<xaml::Media::Brush>();
+        }
+    }
+    for (const auto& merged : dictionary.MergedDictionaries()) {
+        if (auto found = ThemedBrush(merged, theme, name)) return found;
+    }
+    return nullptr;
+}
+
 }  // namespace
+
+void SetTheme(std::string_view theme) {
+    CurrentTheme() = std::string(theme);
+    auto& followers = Followers();
+    std::erase_if(followers, [](const auto& weak) { return !weak.get(); });
+    for (const auto& weak : followers) {
+        if (const auto root = weak.get()) root.RequestedTheme(ElementThemeFor(CurrentTheme()));
+    }
+}
+
+std::string Theme() {
+    return CurrentTheme();
+}
+
+void FollowTheme(xaml::FrameworkElement const& root) {
+    root.RequestedTheme(ElementThemeFor(CurrentTheme()));
+    Followers().push_back(winrt::make_weak(root));
+}
 
 xaml::Media::Brush ThemeBrush(wchar_t const* key) {
     auto resources = xaml::Application::Current().Resources();
     const auto name = box_value(key);
+    if (CurrentTheme() != "system") {
+        if (auto found = ThemedBrush(resources, CurrentTheme() == "dark" ? L"Dark" : L"Light", name)) return found;
+    }
     if (resources.HasKey(name)) {
         return resources.Lookup(name).as<xaml::Media::Brush>();
     }
@@ -541,6 +595,7 @@ void RunNext() {
 ctl::ContentDialog ShowDialog(xaml::XamlRoot const& root, const DialogOptions& options, std::function<void()> done) {
     ctl::ContentDialog dialog;
     dialog.XamlRoot(root);
+    FollowTheme(dialog);
     dialog.Title(box_value(H(options.title)));
     if (options.content) dialog.Content(options.content);
     if (!options.primaryText.empty()) {

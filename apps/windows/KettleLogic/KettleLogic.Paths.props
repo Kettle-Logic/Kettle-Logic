@@ -6,7 +6,7 @@
   <Import Project="KettleLogic.Local.props" Condition="Exists('KettleLogic.Local.props')" />
   <PropertyGroup>
     <!-- The app's own version, shown in About Kettle Logic. The engine's version is kettlelogic/version.hpp. -->
-    <KettleLogicUiVersion>0.1.0</KettleLogicUiVersion>
+    <KettleLogicUiVersion>0.2.0</KettleLogicUiVersion>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..'))\</RepoRoot>
     <!-- build.ps1 builds both libraries here. -->
     <EngineBuildDir>$(RepoRoot)build\windows-logic\</EngineBuildDir>

@@ -118,10 +118,12 @@ MainWindow::MainWindow() : store_(MakePaths()), host_{store_, window_} {
     host_.openFile = [this] { OpenFile(); };
     store_.changed = [this] { ScheduleRefresh(); };
 
+    ui::SetTheme(store_.preferences.string(PrefKey::appearance));
     BuildMenu();
     BuildToolbar();
     BuildLayout();
     AddAccelerators();
+    ui::FollowTheme(root_);
     window_.Content(root_);
 
     const auto queue = window_.DispatcherQueue();
@@ -460,6 +462,7 @@ void MainWindow::Refresh() {
     UpdateChrome();
     RebuildSidebar();
     UpdateDetail();
+    if (helpWindow_) helpWindow_->ApplyTheme();
     if (startupDialogsShown_) {
         PresentPending();
     }

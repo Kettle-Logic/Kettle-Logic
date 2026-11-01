@@ -43,6 +43,13 @@ void AddClass(GtkWidget* widget, const char* name) {
 
 }  // namespace
 
+void ApplyAppearance(std::string_view appearance) {
+    const AdwColorScheme scheme = appearance == "light"  ? ADW_COLOR_SCHEME_FORCE_LIGHT
+                                  : appearance == "dark" ? ADW_COLOR_SCHEME_FORCE_DARK
+                                                         : ADW_COLOR_SCHEME_DEFAULT;
+    adw_style_manager_set_color_scheme(adw_style_manager_get_default(), scheme);
+}
+
 void Later(Callback work) {
     g_idle_add_full(
         G_PRIORITY_DEFAULT_IDLE,

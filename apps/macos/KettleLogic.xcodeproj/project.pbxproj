@@ -273,7 +273,7 @@
 				KL_GA_DEBUG = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../build/core";
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = "-lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = com.kettlelogic.KettleLogic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -310,7 +310,7 @@
 				KL_GA_DEBUG = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../build/core";
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = "-lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = com.kettlelogic.KettleLogic;
 				PRODUCT_NAME = "$(TARGET_NAME)";

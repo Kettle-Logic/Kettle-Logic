@@ -14,6 +14,8 @@ enum Preferences {
     /// Whether the recipe view shows only what a new brewer needs. Advanced tabs and fields stay
     /// reachable by turning this off, and a tab that already holds data is never hidden.
     static let simpleModeKey = "simpleMode"
+    /// The color theme: "system", "light", or "dark" (see `Appearance`).
+    static let appearanceKey = "appearance"
     /// Whether the user has been asked which interface they want. Unset on a first launch, which shows
     /// the choice sheet. The answer is stored in `simpleModeKey`, and can be changed in Settings.
     static let interfaceChosenKey = "interfaceChosen"
@@ -33,6 +35,7 @@ enum Preferences {
     static var defaults: [String: Any] {
         [
             simpleModeKey: true,
+            appearanceKey: Appearance.system.rawValue,
             interfaceChosenKey: false,
             groupedTabsKey: true,
             checkForUpdatesKey: true,
@@ -51,6 +54,33 @@ enum Preferences {
     /// `EquipmentLibrary.profile(named:)`.
     static var defaultEquipmentName: String {
         UserDefaults.standard.string(forKey: defaultEquipmentKey) ?? Equipment.builtIn[0].name
+    }
+}
+
+/// The color theme of every window. System follows the Mac's setting.
+enum Appearance: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .light: "Light"
+        case .dark: "Dark"
+        }
+    }
+
+    /// Applies the saved choice to the whole app: windows, sheets, and the settings window. A nil appearance follows the system.
+    @MainActor static func apply() {
+        let saved = Appearance(rawValue: UserDefaults.standard.string(forKey: Preferences.appearanceKey) ?? "") ?? .system
+        NSApplication.shared.appearance = switch saved {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
     }
 }
 
@@ -175,6 +205,7 @@ struct SettingsView: View {
     @AppStorage(Preferences.unitsKey) private var units = UnitSystem.metric
     @AppStorage(Preferences.defaultEquipmentKey) private var defaultEquipment = Equipment.builtIn[0].name
     @AppStorage(Preferences.recipeFolderKey) private var recipeFolder = ""
+    @AppStorage(Preferences.appearanceKey) private var appearance = Appearance.system
     @AppStorage(Preferences.simpleModeKey) private var simpleMode = true
     @AppStorage(Preferences.groupedTabsKey) private var groupedTabs = true
     @AppStorage(Preferences.checkForUpdatesKey) private var checkForUpdates = true
@@ -184,6 +215,16 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section {
+                Picker("Color theme", selection: $appearance) {
+                    ForEach(Appearance.allCases) { Text($0.title).tag($0) }
+                }
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text("Light or dark colors for every window. System follows the Mac's setting.")
+            }
+
             Section {
                 Toggle("Simple mode", isOn: $simpleMode)
                 Toggle("Group recipe tabs", isOn: $groupedTabs)
@@ -283,6 +324,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 480)
         .scenePadding()
+        .onChange(of: appearance) { Appearance.apply() }
         .onChange(of: telemetryLevel) {
             UserDefaults.standard.set(true, forKey: Preferences.telemetryNoticeShownKey)
             Analytics.levelChanged()

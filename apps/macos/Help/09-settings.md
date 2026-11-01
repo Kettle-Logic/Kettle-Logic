@@ -10,6 +10,7 @@ Click **Kettle Logic ▸ Settings**, or press **⌘,**.
 
 | Setting | What to do |
 |---|---|
+| **Color theme** | Pick **System** to follow your computer's light or dark setting, or pick **Light** or **Dark**. |
 | **Simple mode** | Turn it on to see only the basics. Turn it off to see every tab. |
 | **Group recipe tabs** | On by default. Groups the tabs under Recipe, Ingredients, Process, and Results. |
 | **Autosave changes** | Turn it on to save each change to the recipe's file as you make it. |

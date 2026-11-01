@@ -13,6 +13,7 @@ namespace kettlelogic::app {
 std::string defaultPreference(const std::string& key) {
     if (key == PrefKey::simpleMode) return "true";
     if (key == PrefKey::interfaceChosen) return "false";
+    if (key == PrefKey::appearance) return "system";
     if (key == PrefKey::groupedTabs) return "true";  // as on macOS
     if (key == PrefKey::autosave) return "true";
     if (key == PrefKey::confirmDelete) return "true";

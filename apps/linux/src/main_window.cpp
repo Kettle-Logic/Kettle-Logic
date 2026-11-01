@@ -69,6 +69,7 @@ void InstallStyle() {
 MainWindow::MainWindow(AdwApplication* application)
     : application_(application), store_(MakePaths()), host_{store_, nullptr, {}, {}, {}, {}, {}} {
     InstallStyle();
+    ui::ApplyAppearance(store_.preferences.string(PrefKey::appearance));
     window_ = adw_application_window_new(GTK_APPLICATION(application));
     host_.window = GTK_WINDOW(window_);
     gtk_window_set_title(GTK_WINDOW(window_), "Kettle Logic");
@@ -907,7 +908,7 @@ void MainWindow::OpenHelpWindow() {
 void MainWindow::ShowAbout() {
     AdwDialog* about = adw_about_dialog_new();
     adw_about_dialog_set_application_name(ADW_ABOUT_DIALOG(about), "Kettle Logic");
-    adw_about_dialog_set_version(ADW_ABOUT_DIALOG(about), "0.1.0");
+    adw_about_dialog_set_version(ADW_ABOUT_DIALOG(about), "0.2.0");
     adw_about_dialog_set_comments(ADW_ABOUT_DIALOG(about), "Design and manage homebrew recipes.");
     adw_about_dialog_set_developer_name(ADW_ABOUT_DIALOG(about), "Kettle Logic");
     adw_dialog_present(about, window_);

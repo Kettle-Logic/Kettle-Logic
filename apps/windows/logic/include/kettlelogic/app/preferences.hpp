@@ -26,6 +26,8 @@ inline constexpr const char* simpleMode = "simpleMode";
 // Whether the user has been asked which interface they want. Unset on a first launch, which shows the
 // choice dialog. The answer is stored in `simpleMode`, and can be changed in Settings.
 inline constexpr const char* interfaceChosen = "interfaceChosen";
+// The color theme: "system" follows the operating system, "light" and "dark" override it.
+inline constexpr const char* appearance = "appearance";
 // Whether the recipe's tabs are grouped under Recipe, Ingredients, Process, and Results.
 inline constexpr const char* groupedTabs = "groupedTabs";
 // Whether the app checks for a newer version when it starts. A check the user asks for always runs.
