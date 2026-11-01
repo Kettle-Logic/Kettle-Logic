@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var store: DocumentStore
     @AppStorage(Preferences.interfaceChosenKey) private var interfaceChosen = false
+    @AppStorage(Preferences.telemetryNoticeShownKey) private var telemetryNoticeShown = false
 
     var body: some View {
         NavigationSplitView {
@@ -33,6 +34,10 @@ struct ContentView: View {
         }
         .sheet(isPresented: Binding(get: { !interfaceChosen }, set: { _ in })) {
             InterfaceChoiceSheet()
+        }
+        // An upgrade from a version that never asked: tell the user once.
+        .sheet(isPresented: Binding(get: { interfaceChosen && !telemetryNoticeShown }, set: { _ in })) {
+            TelemetryNoticeSheet()
         }
         .alert("Kettle Logic", isPresented: errorIsShown) {
             Button("OK") { store.errorMessage = nil }

@@ -20,7 +20,8 @@ finish-args:
   - --socket=wayland
   - --socket=fallback-x11
   - --device=dri
-  # The update check reads the update list on GitHub. Nothing else leaves the sandbox.
+  # The update check reads the update list on GitHub, and anonymous reports go to Google Analytics unless the user turns
+  # them off (docs/privacy.md). Nothing else leaves the sandbox.
   - --share=network
   # The default recipe folder, ~/KettleLogic/Recipes. Other folders are chosen through the file portal.
   - --filesystem=~/KettleLogic:create

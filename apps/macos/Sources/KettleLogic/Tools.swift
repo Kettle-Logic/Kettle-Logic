@@ -175,6 +175,7 @@ struct ToolView: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear { Analytics.record(.featureUsed, ["feature": .word("tool_\(kind.rawValue)")]) }
         .textFieldStyle(.roundedBorder)
         .navigationTitle(spec.title)
     }

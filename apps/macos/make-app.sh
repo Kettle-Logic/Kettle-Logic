@@ -65,6 +65,16 @@ if [ -f "$here/AppIcon.png" ]; then
     icon_plist="<key>CFBundleIconFile</key><string>AppIcon</string>"
 fi
 
+# Anonymous usage reports go to Google Analytics only in a build given its ids (see docs/privacy.md):
+#   KL_GA_MEASUREMENT_ID=G-XXXXXXXXXX KL_GA_API_SECRET=... [KL_GA_DEBUG=YES] sh make-app.sh
+ga_plist=""
+if [ -n "${KL_GA_MEASUREMENT_ID:-}" ] && [ -n "${KL_GA_API_SECRET:-}" ]; then
+    ga_plist="<key>KLGAMeasurementID</key><string>$KL_GA_MEASUREMENT_ID</string><key>KLGAAPISecret</key><string>$KL_GA_API_SECRET</string>"
+    if [ "${KL_GA_DEBUG:-}" = "YES" ]; then
+        ga_plist="$ga_plist<key>KLGADebug</key><string>YES</string>"
+    fi
+fi
+
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -80,6 +90,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
     <key>CFBundleVersion</key><string>$app_build</string>
     <key>KLEngineVersion</key><string>$engine_version</string>
     <key>KLUpdateManifestURL</key><string>$update_manifest_url</string>
+    $ga_plist
     <key>LSMinimumSystemVersion</key><string>26.0</string>
     <key>NSPrincipalClass</key><string>NSApplication</string>
     <key>NSHighResolutionCapable</key><true/>

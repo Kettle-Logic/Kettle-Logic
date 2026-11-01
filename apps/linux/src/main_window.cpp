@@ -2,6 +2,7 @@
 
 #include "kettlelogic/app/text.hpp"
 #include "app_update_check.hpp"
+#include "telemetry.hpp"
 
 namespace kl {
 
@@ -113,6 +114,7 @@ MainWindow::MainWindow(AdwApplication* application)
 }
 
 MainWindow::~MainWindow() {
+    telemetry::Stop();
     *alive_ = false;
     if (refreshSource_ != 0) g_source_remove(refreshSource_);
     if (autosaveSource_ != 0) g_source_remove(autosaveSource_);
@@ -125,7 +127,13 @@ void MainWindow::Present() {
         if (!*alive || startupDialogsShown_) return;
         startupDialogsShown_ = true;
         if (!store_.preferences.boolean(PrefKey::interfaceChosen)) {
+            // The first-launch dialog asks about telemetry too, and starts it when it is answered.
             dialogs::ShowInterfaceChoice(host_);
+        } else if (!store_.preferences.boolean(PrefKey::telemetryNoticeShown)) {
+            // An upgrade from a version that never asked: tell the user once, and start when they have read it.
+            dialogs::ShowTelemetryNotice(host_);
+        } else {
+            telemetry::Start(store_.preferences);
         }
         Refresh();
         if (store_.preferences.boolean(PrefKey::checkForUpdates)) {
@@ -138,6 +146,11 @@ void MainWindow::Present() {
 void MainWindow::CheckForUpdates(bool asked) {
     update_check::CheckInBackground([this, alive = alive_, asked](updates::CheckResult result) {
         if (!*alive) return;
+        namespace analytics = kettlelogic::app::analytics;
+        const char* outcome = result.status == updates::CheckResult::Status::available   ? "available"
+                              : result.status == updates::CheckResult::Status::upToDate ? "up_to_date"
+                                                                                         : "failed";
+        telemetry::Record(analytics::Event::updateCheck, {analytics::Param::word("result", outcome)});
         switch (result.status) {
         case updates::CheckResult::Status::available:
             update_check::Offer(window_, *result.release);
@@ -850,6 +863,7 @@ void MainWindow::ExportRecipe(const std::string& format) {
                                } else {
                                    platform::WriteTextFile(target, doc->exportRecipe(recipeId, engine));
                                }
+                               telemetry::Record(analytics::Event::exportRecipe, {analytics::Param::word("format", format)});
                            } catch (const std::exception& e) {
                                store_.errorMessage = e.what();
                                ScheduleRefresh();
@@ -860,6 +874,7 @@ void MainWindow::ExportRecipe(const std::string& format) {
 // MARK: Other windows
 
 void MainWindow::OpenToolWindow(ToolKind kind, std::map<std::string, std::string> prefill) {
+    telemetry::Record(analytics::Event::featureUsed, {analytics::Param::word("feature", "tool_" + toolKindName(kind))});
     auto window = std::make_unique<ToolWindow>(host_, kind, std::move(prefill), [this, alive = alive_](ToolWindow* closed) {
         if (!*alive) return;
         toolWindows_.erase(std::remove_if(toolWindows_.begin(), toolWindows_.end(),

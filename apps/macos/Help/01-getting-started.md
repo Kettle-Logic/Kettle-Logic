@@ -8,7 +8,8 @@ The first time you open Kettle Logic, it asks how much you want to see.
 
 1. Click **Simple** to see only the basics. This is the best choice if you are new to brewing.
 2. Click **Full** to see every tab, including water, mash, and yeast starter.
-3. Click **Continue**.
+3. Choose how much anonymous data to share: **Off**, **Limited**, or **Enhanced**. **Limited** is selected at first, and docs/privacy.md in the project lists exactly what each one sends.
+4. Click **Continue**.
 
 To switch later, open **Kettle Logic ▸ Settings**, or press **⌘,**, and change **Simple mode** under **Interface**.
 

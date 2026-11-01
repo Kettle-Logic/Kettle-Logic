@@ -4,6 +4,7 @@
 
 #include "AppUpdates.h"
 #include "Dialogs.h"
+#include "Telemetry.h"
 
 #include "kettlelogic/app/text.hpp"
 #include "kettlelogic/version.hpp"
@@ -147,7 +148,13 @@ MainWindow::MainWindow() : store_(MakePaths()), host_{store_, window_} {
         if (startupDialogsShown_) return;
         startupDialogsShown_ = true;
         if (!store_.preferences.boolean(PrefKey::interfaceChosen)) {
+            // The first-launch dialog asks about telemetry too, and starts it when it is answered.
             dialogs::ShowInterfaceChoice(host_);
+        } else if (!store_.preferences.boolean(PrefKey::telemetryNoticeShown)) {
+            // An upgrade from a version that never asked: tell the user once, and start when they have read it.
+            dialogs::ShowTelemetryNotice(host_);
+        } else {
+            telemetry::Start(store_.preferences);
         }
         Refresh();
         if (store_.preferences.boolean(PrefKey::checkForUpdates)) {
@@ -159,11 +166,18 @@ MainWindow::MainWindow() : store_(MakePaths()), host_{store_, window_} {
     Refresh();
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() {
+    telemetry::Stop();
+}
 
 // A check the user asked for always says what it found. The automatic check at launch speaks only to offer an update.
 void MainWindow::CheckForUpdates(bool asked) {
     update_check::CheckInBackground(window_.DispatcherQueue(), [this, asked](kettlelogic::app::updates::CheckResult result) {
+        namespace analytics = kettlelogic::app::analytics;
+        const char* outcome = result.status == kettlelogic::app::updates::CheckResult::Status::available ? "available"
+                              : result.status == kettlelogic::app::updates::CheckResult::Status::upToDate ? "up_to_date"
+                                                                                                           : "failed";
+        telemetry::Record(analytics::Event::updateCheck, {analytics::Param::word("result", outcome)});
         switch (result.status) {
         case kettlelogic::app::updates::CheckResult::Status::available:
             update_check::Offer(host_.xamlRoot(), window_.DispatcherQueue(), *result.release);
@@ -819,6 +833,8 @@ void MainWindow::ExportRecipe(const std::string& format, bool share) {
         } else {
             platform::WriteTextFile(target, doc->exportRecipe(recipe->id, chosen->engine));
         }
+        telemetry::Record(kettlelogic::app::analytics::Event::exportRecipe,
+                          {kettlelogic::app::analytics::Param::word("format", chosen->name)});
         if (share) {
             platform::ShareFile(host_.hwnd(), target, recipe->name);
         }
@@ -834,6 +850,8 @@ void MainWindow::ExportRecipe(const std::string& format, bool share) {
 // MARK: Other windows
 
 void MainWindow::OpenToolWindow(ToolKind kind, std::map<std::string, std::string> prefill) {
+    telemetry::Record(kettlelogic::app::analytics::Event::featureUsed,
+                      {kettlelogic::app::analytics::Param::word("feature", "tool_" + toolKindName(kind))});
     auto window = std::make_unique<ToolWindow>(host_, kind, std::move(prefill), [this](ToolWindow* closed) {
         toolWindows_.erase(std::remove_if(toolWindows_.begin(), toolWindows_.end(),
                                           [closed](const auto& w) { return w.get() == closed; }),

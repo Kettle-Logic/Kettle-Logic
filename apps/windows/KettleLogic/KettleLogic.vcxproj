@@ -125,6 +125,7 @@
       <SubType>Code</SubType>
     </ClInclude>
     <ClInclude Include="AppUpdates.h" />
+    <ClInclude Include="Telemetry.h" />
     <ClInclude Include="Dialogs.h" />
     <ClInclude Include="Host.h" />
     <ClInclude Include="MainWindow.h" />
@@ -155,6 +156,7 @@
     </ClCompile>
     <ClCompile Include="PlanningTabs.cpp" />
     <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="Telemetry.cpp" />
     <ClCompile Include="ProcedureTab.cpp" />
     <ClCompile Include="RecipeView.cpp" />
     <ClCompile Include="ToolView.cpp" />

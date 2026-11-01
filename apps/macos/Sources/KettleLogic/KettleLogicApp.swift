@@ -35,6 +35,12 @@ struct KettleLogicApp: App {
                 }
                 .onAppear { NSApplication.shared.activate() }
                 .task {
+                    // A first launch, or an upgrade that has not been told about telemetry, starts it once the user has
+                    // answered the sheet that asks.
+                    if UserDefaults.standard.bool(forKey: Preferences.interfaceChosenKey),
+                       UserDefaults.standard.bool(forKey: Preferences.telemetryNoticeShownKey) {
+                        Analytics.start()
+                    }
                     if UserDefaults.standard.bool(forKey: Preferences.checkForUpdatesKey) {
                         await updates.check(automatically: true)
                     }

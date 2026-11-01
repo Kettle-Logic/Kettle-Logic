@@ -30,6 +30,13 @@ inline constexpr const char* interfaceChosen = "interfaceChosen";
 inline constexpr const char* groupedTabs = "groupedTabs";
 // Whether the app checks for a newer version when it starts. A check the user asks for always runs.
 inline constexpr const char* checkForUpdates = "checkForUpdates";
+// How much anonymous usage and error data the app sends: "off", "limited", or "enhanced" (see analytics.hpp).
+inline constexpr const char* telemetryLevel = "telemetryLevel";
+// Whether the user has been told about telemetry, by the first-launch choice dialog or the notice shown after an
+// upgrade. Unset shows the notice once.
+inline constexpr const char* telemetryNoticeShown = "telemetryNoticeShown";
+// The random id that groups one install's events. It is made on first use, and Settings can replace it.
+inline constexpr const char* analyticsClientId = "analyticsClientId";
 }  // namespace PrefKey
 
 class Preferences {

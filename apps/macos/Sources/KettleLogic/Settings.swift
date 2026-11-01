@@ -22,6 +22,13 @@ enum Preferences {
     static let groupedTabsKey = "groupedTabs"
     /// Whether the app checks GitHub for updates when it starts. A check the user asks for always runs.
     static let checkForUpdatesKey = "checkForUpdates"
+    /// How much anonymous usage and error data the app sends: "off", "limited", or "enhanced" (see `TelemetryLevel`).
+    static let telemetryLevelKey = "telemetryLevel"
+    /// Whether the user has been told about telemetry, by the first-launch choice sheet or the notice shown after an
+    /// upgrade. Unset shows the notice once.
+    static let telemetryNoticeShownKey = "telemetryNoticeShown"
+    /// The random id that groups one install's reports. It is made on first use, and Settings can replace it.
+    static let analyticsClientIdKey = "analyticsClientId"
 
     static var defaults: [String: Any] {
         [
@@ -29,6 +36,8 @@ enum Preferences {
             interfaceChosenKey: false,
             groupedTabsKey: true,
             checkForUpdatesKey: true,
+            telemetryLevelKey: TelemetryLevel.limited.rawValue,
+            telemetryNoticeShownKey: false,
             autosaveKey: true,
             confirmDeleteKey: true,
             unitsKey: UnitSystem.metric.rawValue,
@@ -169,6 +178,7 @@ struct SettingsView: View {
     @AppStorage(Preferences.simpleModeKey) private var simpleMode = true
     @AppStorage(Preferences.groupedTabsKey) private var groupedTabs = true
     @AppStorage(Preferences.checkForUpdatesKey) private var checkForUpdates = true
+    @AppStorage(Preferences.telemetryLevelKey) private var telemetryLevel = TelemetryLevel.limited
     @Environment(EquipmentLibrary.self) private var equipment
     @Environment(UpdateCenter.self) private var updates
 
@@ -235,6 +245,20 @@ struct SettingsView: View {
             }
 
             Section {
+                Picker("Share anonymous data", selection: $telemetryLevel) {
+                    ForEach(TelemetryLevel.allCases) { Text($0.title).tag($0) }
+                }
+                Button("Reset Anonymous ID") { Analytics.resetClientID() }
+            } header: {
+                Text("Privacy")
+            } footer: {
+                Text("Sends anonymous error reports and usage data to help find and fix problems. Nothing about your "
+                    + "recipes is ever sent, and nothing identifies you. "
+                    + TelemetryLevel.allCases.map { "\($0.title): \($0.detail)" }.joined(separator: " ")
+                    + " Resetting the ID means later reports are not linked to earlier ones.")
+            }
+
+            Section {
                 Picker("Units", selection: $units) {
                     ForEach(UnitSystem.allCases) { Text($0.title).tag($0) }
                 }
@@ -259,6 +283,10 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 480)
         .scenePadding()
+        .onChange(of: telemetryLevel) {
+            UserDefaults.standard.set(true, forKey: Preferences.telemetryNoticeShownKey)
+            Analytics.levelChanged()
+        }
     }
 
     /// The default system by name. A saved name that no system has shows the system a recipe falls back to.

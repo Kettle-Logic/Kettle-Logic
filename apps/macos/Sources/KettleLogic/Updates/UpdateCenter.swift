@@ -59,6 +59,7 @@ final class UpdateCenter {
                 engineVersion: EngineLoader.loaded?.version ?? .zero,
                 interface: EngineLoader.interface
             )
+            Analytics.record(.updateCheck, ["result": .word(offer == nil ? "up_to_date" : "available")])
             if let offer {
                 phase = .offered(offer)
                 isPresented = true
@@ -69,6 +70,7 @@ final class UpdateCenter {
                 }
             }
         } catch {
+            Analytics.record(.updateCheck, ["result": .word("failed")])
             if automatically {
                 phase = .idle
             } else {

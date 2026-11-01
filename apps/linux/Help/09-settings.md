@@ -17,6 +17,8 @@ Open the **main menu** (the button with three lines at the top right) and choose
 | **Units** | Pick metric or US. |
 | **Default brewing system** | Pick the system that new recipes start with. |
 | **Recipe Folder** | Choose the folder where new recipes are saved. |
+| **Share anonymous data** | Pick **Off**, **Limited**, or **Enhanced**. docs/privacy.md in the project lists exactly what each one sends. |
+| **Anonymous ID** | Click **Reset** (or **Reset Anonymous ID**) to replace the random ID that groups your reports. |
 | **Keep display on** | Turn it on to keep the screen awake while you brew. |
 
 ## Keyboard shortcuts

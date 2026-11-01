@@ -19,6 +19,7 @@ if(NOT TARGET kettlelogic_core)
 endif()
 
 add_library(kettlelogic_app_logic STATIC
+    logic/src/analytics.cpp
     logic/src/app_updates.cpp
     logic/src/brew_day.cpp
     logic/src/brew_sheet.cpp
@@ -43,6 +44,18 @@ target_link_libraries(kettlelogic_app_logic PUBLIC kettlelogic_core)
 # A build can check another update list, such as a local one for testing: -DKETTLELOGIC_UPDATE_MANIFEST_URL=...
 if(KETTLELOGIC_UPDATE_MANIFEST_URL)
     target_compile_definitions(kettlelogic_app_logic PUBLIC KETTLELOGIC_UPDATE_MANIFEST_URL="${KETTLELOGIC_UPDATE_MANIFEST_URL}")
+endif()
+
+# Reports go to Google Analytics only in a build that is given its ids:
+#   -DKETTLELOGIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX -DKETTLELOGIC_GA_API_SECRET=... [-DKETTLELOGIC_GA_DEBUG=ON]
+# Without them the analytics module compiles but sends nothing.
+if(KETTLELOGIC_GA_MEASUREMENT_ID AND KETTLELOGIC_GA_API_SECRET)
+    target_compile_definitions(kettlelogic_app_logic PRIVATE
+        KETTLELOGIC_GA_MEASUREMENT_ID="${KETTLELOGIC_GA_MEASUREMENT_ID}"
+        KETTLELOGIC_GA_API_SECRET="${KETTLELOGIC_GA_API_SECRET}")
+    if(KETTLELOGIC_GA_DEBUG)
+        target_compile_definitions(kettlelogic_app_logic PRIVATE KETTLELOGIC_GA_DEBUG=1)
+    endif()
 endif()
 
 if(MSVC)

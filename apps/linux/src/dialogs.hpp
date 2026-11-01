@@ -41,8 +41,13 @@ void ShowWizard(Host& host);
 // The settings, which take effect as they are changed.
 void ShowSettings(Host& host);
 
-// Asks on the first launch which interface the user wants.
+// Asks on the first launch which interface the user wants, and how much anonymous usage and error data to share.
+// Answering starts the app's reports.
 void ShowInterfaceChoice(Host& host);
+
+// Tells a user who upgraded from a version that never asked that anonymous error reports are on, and lets them
+// change that. Closing it starts the app's reports.
+void ShowTelemetryNotice(Host& host);
 
 // Asks for a name, such as a new folder's, or the new name of a folder or recipe. `placeholder` says what the field is for.
 void ShowNameDialog(Host& host, std::string title, std::string actionTitle, std::string placeholder, std::string current,

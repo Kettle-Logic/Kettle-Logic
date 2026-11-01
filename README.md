@@ -2,7 +2,9 @@
 
 Kettle Logic is free, open-source recipe software for beer, cider, mead, and wine. Design a recipe, check it against its
 style, and follow it step by step on brew day. It runs natively on macOS, Windows, and Linux, with no account and no
-sign-up. Your recipes stay on your computer.
+sign-up. Your recipes stay on your computer. The app can send anonymous error reports and basic usage data to help
+find and fix problems. It asks you the first time you open it, and you can turn it off. See
+[docs/privacy.md](docs/privacy.md) for exactly what is sent.
 
 ## What you can do
 

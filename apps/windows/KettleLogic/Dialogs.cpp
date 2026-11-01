@@ -2,6 +2,7 @@
 
 #include "Dialogs.h"
 
+#include "Telemetry.h"
 #include "Views.h"
 
 #include "kettlelogic/app/glossary.hpp"
@@ -602,8 +603,65 @@ void ShowNameDialog(Host& host, std::string title, std::string actionTitle, std:
 
 // MARK: Interface choice
 
+namespace {
+
+// The three telemetry levels, as the first-launch dialog, the notice, and Settings describe them. docs/privacy.md lists
+// exactly what each one sends.
+struct TelemetryLevelText {
+    const char* value;
+    const char* title;
+    const char* detail;
+};
+constexpr TelemetryLevelText kTelemetryLevels[] = {
+    {"off", "Off", "Nothing is sent."},
+    {"limited", "Limited",
+     "Crash and error reports, and that the app was opened, with the app and system version. Nothing about your recipes."},
+    {"enhanced", "Enhanced",
+     "Also which features are used, such as exporting or a tool. Still anonymous, and never your recipes."},
+};
+
+std::vector<ui::Choice> TelemetryChoices() {
+    std::vector<ui::Choice> choices;
+    for (const TelemetryLevelText& level : kTelemetryLevels) choices.push_back({level.value, level.title});
+    return choices;
+}
+
+// Records a new telemetry level, and tells the reporter.
+void SetTelemetryLevel(Host& host, const std::string& value) {
+    host.store.preferences.setString(PrefKey::telemetryLevel, value);
+    host.store.preferences.setBoolean(PrefKey::telemetryNoticeShown, true);
+    telemetry::LevelChanged();
+}
+
+}  // namespace
+
+void ShowTelemetryNotice(Host& host) {
+    ctl::StackPanel stack;
+    stack.Spacing(12);
+    stack.Width(440);
+    stack.Children().Append(ui::Text("Kettle Logic can send anonymous error reports and basic usage data, to help find and "
+                                     "fix problems. Nothing about your recipes is ever sent, and nothing identifies you. It "
+                                     "is set to Limited. Choose another level here, or change it any time in Settings under "
+                                     "Privacy.", ui::Kind::body));
+    stack.Children().Append(ui::Picker(TelemetryChoices(), host.store.preferences.string(PrefKey::telemetryLevel),
+                                       [&host](std::string value) { SetTelemetryLevel(host, value); }, 160));
+    for (const TelemetryLevelText& level : kTelemetryLevels) {
+        stack.Children().Append(ui::Text(std::string(level.title) + ": " + level.detail, ui::Kind::caption));
+    }
+
+    ui::DialogOptions options;
+    options.title = "Help Improve Kettle Logic";
+    options.content = stack;
+    options.closeText = "OK";
+    ui::ShowDialog(host.xamlRoot(), options, [&host] {
+        host.store.preferences.setBoolean(PrefKey::telemetryNoticeShown, true);
+        telemetry::Start(host.store.preferences);
+    });
+}
+
 void ShowInterfaceChoice(Host& host) {
     auto simple = std::make_shared<bool>(true);
+    auto telemetryLevel = std::make_shared<std::string>(host.store.preferences.string(PrefKey::telemetryLevel));
     ctl::StackPanel stack;
     stack.Spacing(14);
     stack.Width(440);
@@ -631,14 +689,33 @@ void ShowInterfaceChoice(Host& host) {
     stack.Children().Append(ui::Text("You can change this any time in Settings under Interface, or from View \xE2\x96\xB8 Simple Mode.",
                                      ui::Kind::caption));
 
+    // Anonymous usage and error data. Limited is selected, as it is when the question is never asked.
+    stack.Children().Append(ui::Text("Help improve Kettle Logic by sharing anonymous data?", ui::Kind::secondary));
+    ctl::RadioButtons levels;
+    int selectedLevel = 0;
+    for (int i = 0; i < static_cast<int>(std::size(kTelemetryLevels)); ++i) {
+        levels.Items().Append(option(kTelemetryLevels[i].title, kTelemetryLevels[i].detail));
+        if (*telemetryLevel == kTelemetryLevels[i].value) selectedLevel = i;
+    }
+    levels.SelectedIndex(selectedLevel);
+    levels.SelectionChanged([telemetryLevel](auto const& sender, auto const&) {
+        const int index = sender.template as<ctl::RadioButtons>().SelectedIndex();
+        if (index >= 0) *telemetryLevel = kTelemetryLevels[index].value;
+    });
+    stack.Children().Append(levels);
+    stack.Children().Append(ui::Text("You can change this any time in Settings under Privacy. Nothing about your recipes "
+                                     "is ever sent.", ui::Kind::caption));
+
     ui::DialogOptions options;
     options.title = "Welcome to Kettle Logic";
     options.content = stack;
     options.primaryText = "Continue";
     options.closeText = "";
-    options.primary = [&host, simple] {
+    options.primary = [&host, simple, telemetryLevel] {
         host.store.preferences.setBoolean(PrefKey::simpleMode, *simple);
         host.store.preferences.setBoolean(PrefKey::interfaceChosen, true);
+        SetTelemetryLevel(host, *telemetryLevel);
+        telemetry::Start(host.store.preferences);
         host.refresh();
         return true;
     };
@@ -676,6 +753,17 @@ void ShowSettings(Host& host) {
         form.Labeled("Check for updates when Kettle Logic starts", ui::Switch(prefs.boolean(PrefKey::checkForUpdates), [&host](bool on) {
                          host.store.preferences.setBoolean(PrefKey::checkForUpdates, on);
                      }));
+
+        std::string privacy = "Sends anonymous error reports and usage data to help find and fix problems. Nothing about your "
+                              "recipes is ever sent, and nothing identifies you. ";
+        for (const TelemetryLevelText& level : kTelemetryLevels) {
+            privacy += std::string(level.title) + ": " + level.detail + " ";
+        }
+        form.Section("Privacy", privacy);
+        form.Labeled("Share anonymous data", ui::Picker(TelemetryChoices(), prefs.string(PrefKey::telemetryLevel),
+                                                        [&host](std::string value) { SetTelemetryLevel(host, value); }, 160));
+        form.Labeled("Anonymous ID", ui::Button("Reset", [] { telemetry::ResetId(); }),
+                     "Replaces the random ID that groups this app's reports, so later reports are not linked to earlier ones.");
 
         form.Section("Saving", "Autosave writes changes to the file the recipe was opened from or saved to, a few seconds after "
                                "each change. A new recipe is saved only with Save As.");

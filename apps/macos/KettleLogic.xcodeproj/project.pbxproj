@@ -169,6 +169,12 @@
 				"}",
 				"set_key KLEngineVersion \"$KL_ENGINE_VERSION\"",
 				"set_key KLUpdateManifestURL \"$KL_UPDATE_MANIFEST_URL\"",
+				"# Anonymous usage reports go to Google Analytics only in a build given its ids (see docs/privacy.md).",
+				"if [ -n \"$KL_GA_MEASUREMENT_ID\" ] && [ -n \"$KL_GA_API_SECRET\" ]; then",
+				"    set_key KLGAMeasurementID \"$KL_GA_MEASUREMENT_ID\"",
+				"    set_key KLGAAPISecret \"$KL_GA_API_SECRET\"",
+				"    if [ \"$KL_GA_DEBUG\" = YES ]; then set_key KLGADebug YES; fi",
+				"fi",
 				"if [ -n \"$EXPANDED_CODE_SIGN_IDENTITY\" ]; then",
 				"    timestamp=\"\"",
 				"    if [ \"$CONFIGURATION\" = Release ]; then timestamp=\"--timestamp\"; fi",
@@ -262,6 +268,9 @@
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				KL_ENGINE_VERSION = 0.1.0;
 				KL_UPDATE_MANIFEST_URL = "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json";
+				KL_GA_MEASUREMENT_ID = "";
+				KL_GA_API_SECRET = "";
+				KL_GA_DEBUG = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../build/core";
 				MARKETING_VERSION = 0.1.0;
@@ -296,6 +305,9 @@
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				KL_ENGINE_VERSION = 0.1.0;
 				KL_UPDATE_MANIFEST_URL = "https://github.com/Kettle-Logic/Kettle-Logic/releases/download/updates/updates.json";
+				KL_GA_MEASUREMENT_ID = "";
+				KL_GA_API_SECRET = "";
+				KL_GA_DEBUG = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../build/core";
 				MARKETING_VERSION = 0.1.0;

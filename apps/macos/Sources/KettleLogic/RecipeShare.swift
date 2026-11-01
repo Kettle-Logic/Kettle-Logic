@@ -30,6 +30,16 @@ enum RecipeFormat: CaseIterable, Identifiable {
         UTType(filenameExtension: fileExtension) ?? .data
     }
 
+    /// The fixed name the format is reported under, when the user has agreed to share which features are used.
+    var analyticsName: String {
+        switch self {
+        case .beerXML: "beerxml"
+        case .text: "text"
+        case .pdf: "pdf"
+        case .beerJSON: "beerjson"
+        }
+    }
+
     /// The engine's name for the format, where the engine writes it as text. The engine lays out the PDF itself.
     var engineFormat: String? {
         switch self {
@@ -72,6 +82,7 @@ struct RecipeShareMenu: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             try write(format, to: url)
+            Analytics.record(.exportRecipe, ["format": .word(format.analyticsName)])
         } catch {
             store.errorMessage = error.localizedDescription
         }

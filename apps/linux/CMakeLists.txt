@@ -40,6 +40,7 @@ add_library(kettlelogic_gtk_app STATIC
     src/tool_view.cpp
     src/aux_windows.cpp
     src/app_update_check.cpp
+    src/telemetry.cpp
 )
 target_include_directories(kettlelogic_gtk_app PUBLIC src)
 target_link_libraries(kettlelogic_gtk_app PUBLIC kettlelogic_app_logic PkgConfig::GTK4 PkgConfig::ADW PkgConfig::SOUP)

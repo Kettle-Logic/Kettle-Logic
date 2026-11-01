@@ -1,5 +1,6 @@
 // Tests for the Windows app's portable logic: the engine adapter, the app's data, and its state. They run on any
 // platform, so the logic is checked without a Windows machine.
+#include "kettlelogic/app/analytics.hpp"
 #include "kettlelogic/app/app_updates.hpp"
 #include "kettlelogic/app/brew_sheet.hpp"
 #include "kettlelogic/app/catalog.hpp"
@@ -18,6 +19,7 @@
 #include "kettlelogic/app/recipe_text.hpp"
 #include "kettlelogic/app/templates.hpp"
 #include "kettlelogic/app/text.hpp"
+#include "kettlelogic/json.hpp"
 #include "kettlelogic/app/tool_specs.hpp"
 #include "kettlelogic/app/water_profiles.hpp"
 
@@ -1110,6 +1112,141 @@ void testAppUpdates() {
     CHECK(windowsVersion == updates::kAppVersion);
 }
 
+// Collects what the reporter would post, or fails as a dead network does.
+class RecordingTransport : public analytics::Transport {
+public:
+    std::vector<std::string> bodies;
+    std::vector<std::string> urls;
+    bool fail = false;
+    void post(const std::string& url, const std::string& body) override {
+        if (fail) throw std::runtime_error("no connection");
+        urls.push_back(url);
+        bodies.push_back(body);
+    }
+};
+
+void testAnalytics() {
+    using analytics::Event;
+    using analytics::Level;
+    using analytics::Param;
+
+    CHECK(analytics::parseLevel("off") == Level::off);
+    CHECK(analytics::parseLevel("enhanced") == Level::enhanced);
+    CHECK(analytics::parseLevel("limited") == Level::limited);
+    CHECK(analytics::parseLevel("") == Level::limited);  // anything unknown is the default
+    CHECK(Preferences().string(PrefKey::telemetryLevel) == "limited");
+
+    // What is cleaned: paths and addresses go entirely, and long text is cut.
+    CHECK(analytics::clean("C:\\Users\\sam\\recipe.json") == "[removed]");
+    CHECK(analytics::clean("/home/sam/recipes") == "[removed]");
+    CHECK(analytics::clean("sam@example.com") == "[removed]");
+    CHECK(analytics::clean("access_violation") == "access_violation");
+    CHECK(analytics::clean(std::string(250, 'x')).size() == 100);
+
+    // The request body without its layout, so a test can look for a field as "name":value.
+    const auto compact = [](const std::string& text) {
+        std::string out;
+        for (char c : text) {
+            if (c != ' ' && c != '\n') out += c;
+        }
+        return out;
+    };
+
+    const analytics::Endpoint endpoint{"G-TEST", "secret", false};
+    const analytics::Context context{"windows", "1.2.3", "9", "11", "en"};
+    const fs::path marker = fs::temp_directory_path() / "kettlelogic-analytics-marker.txt";
+    fs::remove(marker);
+
+    Preferences preferences;  // in memory
+    RecordingTransport transport;
+    analytics::Reporter reporter(preferences, transport, context, marker, endpoint);
+
+    // Limited, the default: errors and opens are sent, feature use is not.
+    reporter.record(Event::appOpen);
+    reporter.record(Event::featureUsed, {Param::word("feature", "mash_tool")});
+    CHECK(transport.bodies.size() == 1);
+    CHECK(transport.urls[0] == "https://www.google-analytics.com/mp/collect?measurement_id=G-TEST&api_secret=secret");
+    const kettlelogic::json::Value sent = kettlelogic::json::parse(transport.bodies[0]);
+    CHECK(sent.asObject().size() == 3);  // client_id, non_personalized_ads, events
+    CHECK(transport.bodies[0].find("\"app_open\"") != std::string::npos);
+    CHECK(compact(transport.bodies[0]).find("\"app_version\":\"1.2.3\"") != std::string::npos);
+    CHECK(transport.bodies[0].find("\"session_id\"") != std::string::npos);
+
+    // The client id is made once, is a UUID, and a reset changes it.
+    const std::string first = reporter.clientId();
+    CHECK(first.size() == 36 && first[14] == '4');
+    CHECK(reporter.clientId() == first);
+    reporter.resetClientId();
+    CHECK(reporter.clientId() != first);
+
+    // Enhanced adds feature use. A value that is a path never goes out.
+    preferences.setString(PrefKey::telemetryLevel, "enhanced");
+    reporter.record(Event::featureUsed, {Param::word("feature", "mash_tool"), Param::count("steps", 3)});
+    reporter.record(Event::exportRecipe, {Param::word("format", "D:\\beer\\ipa.xml")});
+    CHECK(transport.bodies.size() == 3);
+    CHECK(compact(transport.bodies[1]).find("\"steps\":3") != std::string::npos);
+    CHECK(transport.bodies[2].find("ipa.xml") == std::string::npos);
+    CHECK(transport.bodies[2].find("[removed]") != std::string::npos);
+
+    // Off sends nothing, and a crash marker is dropped without being sent.
+    preferences.setString(PrefKey::telemetryLevel, "off");
+    const std::size_t before = transport.bodies.size();
+    reporter.record(Event::appOpen);
+    reporter.recordError("engine", "42", "recipe");
+    {
+        std::ofstream out(marker);
+        out << analytics::crashMarkerLine({"signal", "11", "ui"});
+    }
+    reporter.sendPendingCrash();
+    CHECK(transport.bodies.size() == before);
+    CHECK(!fs::exists(marker));
+
+    // At Limited a pending crash is sent once, with its fixed words, and removed.
+    preferences.setString(PrefKey::telemetryLevel, "limited");
+    {
+        std::ofstream out(marker);
+        out << analytics::crashMarkerLine({"signal", "11", "ui"});
+    }
+    reporter.sendPendingCrash();
+    CHECK(transport.bodies.size() == before + 1);
+    CHECK(transport.bodies.back().find("\"app_crash\"") != std::string::npos);
+    CHECK(compact(transport.bodies.back()).find("\"error_code\":\"11\"") != std::string::npos);
+    CHECK(compact(transport.bodies.back()).find("\"fatal\":1") != std::string::npos);
+    CHECK(!fs::exists(marker));
+    reporter.sendPendingCrash();
+    CHECK(transport.bodies.size() == before + 1);  // nothing left to send
+
+    // A garbled marker is removed and sends nothing.
+    {
+        std::ofstream out(marker);
+        out << "garbled";
+    }
+    reporter.sendPendingCrash();
+    CHECK(transport.bodies.size() == before + 1);
+    CHECK(!fs::exists(marker));
+
+    // A dead network drops the report quietly.
+    transport.fail = true;
+    reporter.recordError("engine", "42", "recipe");
+
+    // The queue hands reports to the inner transport off the caller's thread, and sends what waits when it is closed.
+    RecordingTransport inner;
+    {
+        analytics::QueuedTransport queued(inner);
+        preferences.setString(PrefKey::telemetryLevel, "limited");
+        analytics::Reporter queuedReporter(preferences, queued, context, marker, endpoint);
+        queuedReporter.record(Event::appOpen);
+        queuedReporter.record(Event::appOpen);
+    }
+    CHECK(inner.bodies.size() == 2);
+
+    // A build with no ids sends nothing at any level.
+    RecordingTransport silent;
+    analytics::Reporter unconfigured(preferences, silent, context, marker, analytics::Endpoint{"", "", false});
+    unconfigured.record(Event::appOpen);
+    CHECK(silent.bodies.empty());
+}
+
 int main() {
     testText();
     testIngredientSearch();
@@ -1133,6 +1270,7 @@ int main() {
     testBrewSheet();
     testBrewDayAndRecipeText();
     testAppUpdates();
+    testAnalytics();
 
     std::cout << checks << " checks, " << failures << " failed\n";
     return failures == 0 ? 0 : 1;

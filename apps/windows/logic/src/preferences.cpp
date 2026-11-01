@@ -21,6 +21,8 @@ std::string defaultPreference(const std::string& key) {
     if (key == PrefKey::recipeFolder) return "";
     if (key == PrefKey::keepDisplayOn) return "true";
     if (key == PrefKey::checkForUpdates) return "true";
+    if (key == PrefKey::telemetryLevel) return "limited";
+    if (key == PrefKey::telemetryNoticeShown) return "false";
     return "";
 }
 
