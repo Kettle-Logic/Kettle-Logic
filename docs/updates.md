@@ -276,12 +276,12 @@ somewhere other than `Kettle-Logic/Kettle-Logic`.
 
 Do all of this in a Linux terminal, or in Windows Subsystem for Linux (WSL 2 with Ubuntu 24.04 or newer; run the commands in
 the WSL shell, inside the Linux file system, such as `~/Kettle-Logic`, not under `/mnt/c`). You need Flatpak and
-`flatpak-builder`, Python 3, and the `gh` tool signed in.
+`flatpak-builder`, FUSE (`fusermount`), Python 3, and the `gh` tool signed in.
 
 1. **Install the tools and the runtime (once).**
 
    ```sh
-   sudo apt install flatpak flatpak-builder python3 gh      # Fedora: sudo dnf install flatpak flatpak-builder python3 gh
+   sudo apt install flatpak flatpak-builder fuse3 python3 gh      # Fedora: sudo dnf install flatpak flatpak-builder fuse python3 gh
    flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
    flatpak install --user flathub org.gnome.Platform//48 org.gnome.Sdk//48
    gh auth login
@@ -406,6 +406,12 @@ the file. Download again. If it persists, regenerate the entry with `tools/updat
 `flatpak update`. Install the newest bundle from the Releases page.
 
 ### Publishing
+
+**`make-release.sh` fails with "failed to exec fusermount" or "Failure spawning rofiles-fuse".** `flatpak-builder` uses FUSE
+for its build cache, and FUSE isn't installed. Install it (`sudo apt install fuse3`, or `sudo dnf install fuse` on Fedora),
+check that `command -v fusermount fusermount3` finds something, and run the script again. In WSL, this needs WSL 2. If FUSE
+still won't work, add `--disable-cache` to the `flatpak-builder` line in `apps/linux/make-release.sh`. Builds are slower
+without the cache.
 
 **`make-release.sh` stops with a version mismatch.** The app's version, the engine's version, and the update address must
 agree. Compare the values in the table under [Before you start](#before-you-start-all-platforms).
