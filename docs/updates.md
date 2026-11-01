@@ -100,7 +100,8 @@ publish adds that platform's entry to `updates.json` and keeps the others.
    ctest --test-dir build/core --output-on-failure
    ```
 
-   On Windows, `make-release.ps1` already does this as part of the build, so skip this step.
+   On Windows, skip this step. `make-release.ps1` builds the engine and runs its tests as part of the build. To run just
+   the engine tests, see [Testing an update list locally](#testing-an-update-list-locally).
 
 Versions are `major.minor.patch` numbers. Pre-release tags are not supported.
 
@@ -276,11 +277,27 @@ Then point a build at it:
 
 The engine's own tests also cover the macOS loader. Build the engine first, then run the tests:
 
+On macOS and Linux:
+
 ```sh
 cmake -S core -B build/core
 cmake --build build/core
 ctest --test-dir build/core --output-on-failure
 ```
+
+On Windows, use a Developer PowerShell and name the Visual Studio generator. Without `-G`, CMake may pick another compiler,
+which fails with syntax errors. Point `BOOST_ROOT` at your Boost headers first (for example, from
+`vcpkg install boost-headers`):
+
+```powershell
+$env:BOOST_ROOT = "C:\vcpkg\installed\x64-windows\include"
+cmake -S core -B build\core -G "Visual Studio 18 2026" -A x64
+cmake --build build\core --config Release
+ctest --test-dir build\core -C Release --output-on-failure
+```
+
+If you reuse a `build\core` folder from an earlier failed attempt, delete it first. CMake remembers the generator it
+first used.
 
 This runs `kettlelogic_engine_loader` (loads the built engine through the loader) and `engine_loader_current` (checks the
 generated loader against the header). The Swift side has no automated tests, so check an update by hand as above.
