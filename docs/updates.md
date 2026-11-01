@@ -92,7 +92,15 @@ publish adds that platform's entry to `updates.json` and keeps the others.
    | Windows app | `KettleLogicUiVersion` in `apps/windows/KettleLogic/KettleLogic.Paths.props` |
    | Interface number | `KL_ENGINE_ABI_VERSION` in `core/include/kettlelogic/c/kettlelogic.h`. Bump it only when a facade function is added, removed, or changes its arguments or meaning. |
 
-3. Run the engine tests: `ctest --test-dir build/core --output-on-failure`.
+3. Build the engine and run its tests. On macOS and Linux:
+
+   ```sh
+   cmake -S core -B build/core
+   cmake --build build/core
+   ctest --test-dir build/core --output-on-failure
+   ```
+
+   On Windows, `make-release.ps1` already does this as part of the build, so skip this step.
 
 Versions are `major.minor.patch` numbers. Pre-release tags are not supported.
 
@@ -266,9 +274,16 @@ Then point a build at it:
 - **macOS:** run `UPDATE_MANIFEST_URL=http://localhost:8000/updates.json apps/macos/make-app.sh`.
 - **Windows and Linux:** add `-DKETTLELOGIC_UPDATE_MANIFEST_URL=http://localhost:8000/updates.json` when you configure CMake.
 
-The engine's own tests also cover the macOS loader: `ctest --test-dir build/core` runs `kettlelogic_engine_loader` (loads
-the built engine through the loader) and `engine_loader_current` (checks the generated loader against the header). The
-Swift side has no automated tests, so check an update by hand as above.
+The engine's own tests also cover the macOS loader. Build the engine first, then run the tests:
+
+```sh
+cmake -S core -B build/core
+cmake --build build/core
+ctest --test-dir build/core --output-on-failure
+```
+
+This runs `kettlelogic_engine_loader` (loads the built engine through the loader) and `engine_loader_current` (checks the
+generated loader against the header). The Swift side has no automated tests, so check an update by hand as above.
 
 ## Troubleshooting
 
